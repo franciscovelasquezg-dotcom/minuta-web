@@ -22,10 +22,12 @@ interface Analisis {
   totalServicios: number
   confirmados: number
   pendientes: number
-  platos: { nombre: string; veces: number; dias: number[] }[]
-  ensaladas: { nombre: string; veces: number }[]
+  diasCiclo: number
+  platosUnicos: number
+  diasMinimoRecomendado: number  // calculado automáticamente
+  platos: { nombre: string; veces: number; dias: number[]; gap: number; estado: 'ok' | 'cercano' | 'repetido' }[]
+  ensaladas: { nombre: string; veces: number; repetida: boolean }[]
   acomps: { nombre: string; veces: number }[]
-  repeticionesProblema: { nombre: string; gap: number; dias: number[] }[]
   distribucionProteina: Record<string, number>
 }
 
@@ -39,9 +41,17 @@ function clasificarTipo(nombre: string): string {
   return 'otro'
 }
 
-function analizarDias(dias: DiaParsed[], diasMinimos = 3): Analisis {
+function calcularGapMinimo(posiciones: number[]): number {
+  if (posiciones.length < 2) return Infinity
+  let min = Infinity
+  for (let i = 1; i < posiciones.length; i++) min = Math.min(min, posiciones[i] - posiciones[i - 1])
+  return min
+}
+
+function analizarDias(dias: DiaParsed[]): Analisis {
   const totalServicios = dias.reduce((a, d) => a + d.servicios.length, 0)
   const confirmados = dias.reduce((a, d) => a + d.servicios.filter(s => s.estado === 'Confirmado').length, 0)
+  const diasCiclo = dias.length
 
   const mapaPlatos = new Map<string, { veces: number; dias: number[] }>()
   const mapaEnsaladas = new Map<string, number>()
@@ -64,32 +74,38 @@ function analizarDias(dias: DiaParsed[], diasMinimos = 3): Analisis {
     })
   })
 
-  const platos = Array.from(mapaPlatos.entries()).map(([nombre, d]) => ({ nombre, ...d })).sort((a, b) => b.veces - a.veces)
+  const platosUnicos = mapaPlatos.size
 
-  const repeticionesProblema = platos.filter(p => {
-    if (p.veces < 2) return false
-    for (let i = 1; i < p.dias.length; i++) {
-      if (p.dias[i] - p.dias[i - 1] < diasMinimos) return true
-    }
-    return false
-  }).map(p => {
-    let minGap = Infinity
-    for (let i = 1; i < p.dias.length; i++) minGap = Math.min(minGap, p.dias[i] - p.dias[i - 1])
-    return { nombre: p.nombre, gap: minGap, dias: p.dias }
-  })
+  // Cálculo automático: el mínimo recomendado es diasCiclo / platosUnicos redondeado
+  // Con un mínimo de 3 y máximo de 7 para ser práctico en faena
+  const diasMinimoRecomendado = Math.min(7, Math.max(3, Math.floor(diasCiclo / platosUnicos)))
+
+  const platosRaw = Array.from(mapaPlatos.entries()).map(([nombre, d]) => {
+    const gap = calcularGapMinimo(d.dias)
+    const estado: 'ok' | 'cercano' | 'repetido' =
+      d.veces === 1 ? 'ok'
+      : gap < diasMinimoRecomendado ? 'repetido'
+      : gap < diasMinimoRecomendado + 2 ? 'cercano'
+      : 'ok'
+    return { nombre, ...d, gap: gap === Infinity ? 0 : gap, estado }
+  }).sort((a, b) => b.veces - a.veces)
 
   const distribucionProteina: Record<string, number> = {}
-  platos.forEach(p => {
+  platosRaw.forEach(p => {
     const t = clasificarTipo(p.nombre)
     distribucionProteina[t] = (distribucionProteina[t] || 0) + p.veces
   })
 
+  const ensaladasRaw = Array.from(mapaEnsaladas.entries())
+    .map(([nombre, veces]) => ({ nombre, veces, repetida: veces > 1 }))
+    .sort((a, b) => b.veces - a.veces)
+
   return {
     totalServicios, confirmados, pendientes: totalServicios - confirmados,
-    platos,
-    ensaladas: Array.from(mapaEnsaladas.entries()).map(([nombre, veces]) => ({ nombre, veces })).sort((a, b) => b.veces - a.veces),
+    diasCiclo, platosUnicos, diasMinimoRecomendado,
+    platos: platosRaw,
+    ensaladas: ensaladasRaw,
     acomps: Array.from(mapaAcomps.entries()).map(([nombre, veces]) => ({ nombre, veces })).sort((a, b) => b.veces - a.veces),
-    repeticionesProblema,
     distribucionProteina,
   }
 }
@@ -151,11 +167,9 @@ const TIPO_COLOR: Record<string, string> = {
 }
 
 export default function SubirPage() {
-  const [dias, setDias] = useState<DiaParsed[]>([])
   const [analisis, setAnalisis] = useState<Analisis | null>(null)
   const [archivo, setArchivo] = useState<string>('')
   const [error, setError] = useState('')
-  const [diasMinimos, setDiasMinimos] = useState(3)
   const [arrastrando, setArrastrando] = useState(false)
 
   const procesar = async (file: File) => {
@@ -163,8 +177,7 @@ export default function SubirPage() {
     try {
       const d = await parsearExcel(file)
       if (d.length === 0) { setError('No se encontraron días en el archivo. Verifica el formato.'); return }
-      setDias(d)
-      setAnalisis(analizarDias(d, diasMinimos))
+      setAnalisis(analizarDias(d))
       setArchivo(file.name)
     } catch {
       setError('Error leyendo el archivo. Asegúrate que sea un .xlsx o .xls válido.')
@@ -176,15 +189,11 @@ export default function SubirPage() {
     setArrastrando(false)
     const file = e.dataTransfer.files[0]
     if (file) procesar(file)
-  }, [diasMinimos])
+  }, [])
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) procesar(file)
-  }
-
-  const recalcular = () => {
-    if (dias.length > 0) setAnalisis(analizarDias(dias, diasMinimos))
   }
 
   const totalPlatos = analisis ? Object.values(analisis.distribucionProteina).reduce((a, b) => a + b, 0) : 0
@@ -219,18 +228,18 @@ export default function SubirPage() {
 
         {analisis && (
           <>
-            {/* Archivo + config */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
-              <div>
-                <p className="text-sm font-semibold text-gray-800">📂 {archivo}</p>
-                <p className="text-xs text-gray-500">{dias.length} días · {analisis.totalServicios} servicios</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <label className="text-xs text-gray-600">Días mínimos entre repeticiones:</label>
-                <input type="number" min={1} max={10} value={diasMinimos}
-                  onChange={e => setDiasMinimos(Number(e.target.value))}
-                  className="w-16 border rounded px-2 py-1 text-sm text-center" />
-                <button onClick={recalcular} className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg">Recalcular</button>
+            {/* Archivo + cálculo automático */}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+              <div className="flex items-start justify-between flex-wrap gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">📂 {archivo}</p>
+                  <p className="text-xs text-gray-500">{analisis.diasCiclo} días · {analisis.totalServicios} servicios · {analisis.platosUnicos} platos distintos</p>
+                </div>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-center">
+                  <p className="text-[11px] text-blue-600 uppercase font-semibold">Gap mínimo calculado automáticamente</p>
+                  <p className="text-2xl font-bold text-blue-700">{analisis.diasMinimoRecomendado} días</p>
+                  <p className="text-[10px] text-blue-500">{analisis.diasCiclo} días ÷ {analisis.platosUnicos} platos</p>
+                </div>
               </div>
             </div>
 
@@ -240,7 +249,7 @@ export default function SubirPage() {
                 { label: 'Total servicios', value: analisis.totalServicios, color: 'text-gray-700' },
                 { label: 'Confirmados', value: analisis.confirmados, color: 'text-green-700' },
                 { label: 'Pendientes', value: analisis.pendientes, color: 'text-yellow-700' },
-                { label: 'Repeticiones ⚠', value: analisis.repeticionesProblema.length, color: 'text-red-700' },
+                { label: 'Problemas ⚠', value: analisis.platos.filter(p => p.estado !== 'ok').length, color: 'text-red-700' },
               ].map(s => (
                 <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-4 text-center shadow-sm">
                   <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
@@ -249,21 +258,41 @@ export default function SubirPage() {
               ))}
             </div>
 
-            {/* Alertas de repetición */}
-            {analisis.repeticionesProblema.length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
-                <h3 className="font-bold text-red-800 mb-3">⚠ Platos repetidos muy cerca (gap &lt; {diasMinimos} días)</h3>
-                <div className="space-y-2">
-                  {analisis.repeticionesProblema.map(r => (
-                    <div key={r.nombre} className="flex items-center justify-between bg-white rounded-lg border border-red-200 px-3 py-2">
-                      <span className="text-sm font-medium text-gray-800">{r.nombre}</span>
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
-                        <span>Gap mínimo: <strong className="text-red-600">{r.gap} días</strong></span>
-                        <span>Días: {r.dias.join(', ')}</span>
-                      </div>
+            {/* Alertas automáticas */}
+            {analisis.platos.some(p => p.estado !== 'ok') && (
+              <div className="mb-6 space-y-2">
+                {analisis.platos.filter(p => p.estado === 'repetido').length > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <h3 className="font-bold text-red-800 mb-3">🚨 Repetidos muy cerca — gap menor a {analisis.diasMinimoRecomendado} días</h3>
+                    <div className="space-y-2">
+                      {analisis.platos.filter(p => p.estado === 'repetido').map(r => (
+                        <div key={r.nombre} className="flex items-center justify-between bg-white rounded-lg border border-red-200 px-3 py-2">
+                          <span className="text-sm font-medium text-gray-800">{r.nombre}</span>
+                          <div className="flex items-center gap-3 text-xs">
+                            <span className="text-red-600 font-bold">Gap: {r.gap} días</span>
+                            <span className="text-gray-400">Días: {r.dias.join(', ')}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                )}
+                {analisis.platos.filter(p => p.estado === 'cercano').length > 0 && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                    <h3 className="font-bold text-orange-800 mb-3">⚠ Cercanos — revisar</h3>
+                    <div className="space-y-2">
+                      {analisis.platos.filter(p => p.estado === 'cercano').map(r => (
+                        <div key={r.nombre} className="flex items-center justify-between bg-white rounded-lg border border-orange-200 px-3 py-2">
+                          <span className="text-sm font-medium text-gray-800">{r.nombre}</span>
+                          <div className="flex items-center gap-3 text-xs">
+                            <span className="text-orange-600 font-bold">Gap: {r.gap} días</span>
+                            <span className="text-gray-400">Días: {r.dias.join(', ')}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -287,21 +316,19 @@ export default function SubirPage() {
               <div className="bg-white rounded-xl border border-gray-200 p-4">
                 <h3 className="font-bold text-gray-700 mb-3">Platos principales <span className="text-gray-400 font-normal text-sm">({analisis.platos.length})</span></h3>
                 <div className="space-y-2">
-                  {analisis.platos.map(p => {
-                    const problema = analisis.repeticionesProblema.find(r => r.nombre === p.nombre)
-                    return (
-                      <div key={p.nombre} className={`p-2 rounded-lg border text-sm ${problema ? 'border-red-200 bg-red-50' : 'border-gray-100'}`}>
-                        <div className="flex justify-between items-start">
-                          <span className="font-medium text-gray-800 text-xs leading-tight">{p.nombre}</span>
-                          <span className={`font-bold text-sm ml-2 shrink-0 ${p.veces > 1 ? (problema ? 'text-red-600' : 'text-orange-500') : 'text-gray-600'}`}>{p.veces}×</span>
-                        </div>
-                        <div className="mt-1 flex gap-2 text-[10px] text-gray-400">
-                          <span className={`px-1.5 py-0.5 rounded-full ${TIPO_COLOR[clasificarTipo(p.nombre)]}`}>{clasificarTipo(p.nombre)}</span>
-                          <span>Días: {p.dias.join(', ')}</span>
-                        </div>
+                  {analisis.platos.map(p => (
+                    <div key={p.nombre} className={`p-2 rounded-lg border text-sm ${p.estado === 'repetido' ? 'border-red-200 bg-red-50' : p.estado === 'cercano' ? 'border-orange-200 bg-orange-50' : 'border-gray-100'}`}>
+                      <div className="flex justify-between items-start">
+                        <span className="font-medium text-gray-800 text-xs leading-tight">{p.nombre}</span>
+                        <span className={`font-bold text-sm ml-2 shrink-0 ${p.estado === 'repetido' ? 'text-red-600' : p.estado === 'cercano' ? 'text-orange-500' : 'text-gray-500'}`}>{p.veces}×</span>
                       </div>
-                    )
-                  })}
+                      <div className="mt-1 flex gap-2 text-[10px] text-gray-400 flex-wrap">
+                        <span className={`px-1.5 py-0.5 rounded-full ${TIPO_COLOR[clasificarTipo(p.nombre)]}`}>{clasificarTipo(p.nombre)}</span>
+                        {p.veces > 1 && <span>Gap: {p.gap}d</span>}
+                        <span>Días: {p.dias.join(', ')}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
