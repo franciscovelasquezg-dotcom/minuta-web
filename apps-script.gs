@@ -12,8 +12,10 @@ const TZ             = 'America/Santiago';
 const HOJA_PLATOS          = 'Platos';
 const HOJA_ENSALADAS       = 'Ensaladas';
 const HOJA_ACOMPAÑAMIENTOS = 'Acompañamientos';
-const HOJA_TURNOS          = 'Turnos';       // configuración de tipos de turno
-const HOJA_PREFIX_MINUTA   = 'Minuta_';      // Minuta_7x7, Minuta_10x10, etc.
+const HOJA_TURNOS          = 'Turnos';
+const HOJA_PREFIX_MINUTA   = 'Minuta_';
+const HOJA_PREFIX_HISTORIAL = 'Historial_';
+const HOJA_CONFIG          = 'Config';
 
 // ── Seguridad HMAC ────────────────────────────────────────────
 function computeHmac(message, secret) {
@@ -41,6 +43,7 @@ function doGet(e) {
       case 'turnos':          return jsonOk(getTurnos());
       case 'minuta':          return jsonOk(getMinuta(e.parameter.turno));
       case 'catalogos':       return jsonOk(getCatalogosCompletos());
+      case 'historial':       return jsonOk(getHistorial(e.parameter.turno));
       default:                return jsonError('tipo no reconocido');
     }
   } catch (err) {
@@ -220,9 +223,7 @@ function guardarMinuta(body) {
     hoja.clearContents();
   }
 
-  // Fila 0: metadatos
   hoja.appendRow([turno, fechaInicio, diasMinimosRepeticion, casino]);
-  // Fila 1: encabezados
   hoja.appendRow(['Dia', 'Fecha', 'DiaSemana', 'Servicio', 'Ensalada', 'Acompañamiento', 'Plato Principal', 'Postre', 'Estado']);
 
   (dias || []).forEach(dia => {
@@ -237,7 +238,107 @@ function guardarMinuta(body) {
     });
   });
 
+  // Guardar snapshot en historial
+  try {
+    guardarHistorialSnapshot(ss, turno, casino, fechaInicio, dias);
+  } catch(e) {
+    Logger.log('Historial error: ' + e.message);
+  }
+
+  // Notificación email
+  try {
+    enviarNotificacion(turno, casino, fechaInicio, dias);
+  } catch(e) {
+    Logger.log('Email error: ' + e.message);
+  }
+
   return { ok: true, hoja: nombreHoja, filas: (dias || []).length };
+}
+
+// ── Historial de versiones ─────────────────────────────────────
+
+function guardarHistorialSnapshot(ss, turno, casino, fechaInicio, dias) {
+  const nombreHoja = HOJA_PREFIX_HISTORIAL + turno;
+  let hoja = ss.getSheetByName(nombreHoja);
+  if (!hoja) {
+    hoja = ss.insertSheet(nombreHoja);
+    hoja.appendRow(['Timestamp', 'Casino', 'FechaInicio', 'Dias', 'Confirmados', 'Snapshot']);
+  }
+
+  const timestamp = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss');
+  const totalDias = (dias || []).length;
+  const confirmados = (dias || []).reduce((acc, d) =>
+    acc + (d.servicios || []).filter(s => s.estado === 'Confirmado').length, 0
+  );
+  const snapshot = JSON.stringify(dias);
+
+  hoja.appendRow([timestamp, casino, fechaInicio, totalDias, confirmados, snapshot]);
+
+  // Mantener solo los últimos 20 snapshots
+  const totalFilas = hoja.getLastRow();
+  if (totalFilas > 21) {
+    hoja.deleteRows(2, totalFilas - 21);
+  }
+}
+
+function getHistorial(turno) {
+  if (!turno) throw new Error('Falta turno');
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const nombreHoja = HOJA_PREFIX_HISTORIAL + turno;
+  const hoja = ss.getSheetByName(nombreHoja);
+  if (!hoja || hoja.getLastRow() <= 1) return [];
+
+  const rows = hoja.getDataRange().getValues();
+  return rows.slice(1).reverse().map(r => ({
+    timestamp:   r[0] ? String(r[0]) : '',
+    casino:      r[1] || '',
+    fechaInicio: r[2] || '',
+    totalDias:   Number(r[3]) || 0,
+    confirmados: Number(r[4]) || 0,
+  }));
+}
+
+// ── Notificación email ─────────────────────────────────────────
+
+function getConfigEmail() {
+  try {
+    const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const hoja = ss.getSheetByName(HOJA_CONFIG);
+    if (!hoja) return null;
+    const rows = hoja.getDataRange().getValues();
+    const row  = rows.find(r => r[0] === 'notif_email');
+    return row ? String(row[1]).trim() : null;
+  } catch(e) {
+    return null;
+  }
+}
+
+function enviarNotificacion(turno, casino, fechaInicio, dias) {
+  const email = getConfigEmail() || Session.getActiveUser().getEmail();
+  if (!email) return;
+
+  const totalDias    = (dias || []).length;
+  const confirmados  = (dias || []).reduce((acc, d) =>
+    acc + (d.servicios || []).filter(s => s.estado === 'Confirmado').length, 0
+  );
+  const pendientes   = totalDias * 2 - confirmados;
+  const timestamp    = Utilities.formatDate(new Date(), TZ, 'dd/MM/yyyy HH:mm');
+
+  const asunto = `Minuta actualizada — ${casino} (${turno}) — ${timestamp}`;
+  const cuerpo = `
+Se guardó una nueva versión de la minuta.
+
+Casino:      ${casino}
+Turno:       ${turno}
+Inicio:      ${fechaInicio}
+Días:        ${totalDias}
+Confirmados: ${confirmados} servicios
+Pendientes:  ${pendientes} servicios
+
+Ver minuta: https://minuta-web-two.vercel.app
+  `.trim();
+
+  MailApp.sendEmail(email, asunto, cuerpo);
 }
 
 // ── POST: CRUD Platos ──────────────────────────────────────────
@@ -358,9 +459,26 @@ function inicializarSheets() {
   _crearHojaEnsaladas(ss);
   _crearHojaAcompañamientos(ss);
   _crearHojaTurnos(ss);
+  _crearHojaConfig(ss);
 
   SpreadsheetApp.flush();
   Logger.log('✅ Sheets inicializados correctamente');
+}
+
+// Ejecutar una vez para crear la hoja Config si no existe
+function crearConfig() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  _crearHojaConfig(ss);
+  SpreadsheetApp.flush();
+  Logger.log('✅ Config creado');
+}
+
+function _crearHojaConfig(ss) {
+  let h = ss.getSheetByName(HOJA_CONFIG);
+  if (h) return; // no sobreescribir si ya existe
+  h = ss.insertSheet(HOJA_CONFIG);
+  h.appendRow(['Clave', 'Valor', 'Descripción']);
+  h.appendRow(['notif_email', Session.getActiveUser().getEmail(), 'Email que recibe notificaciones al guardar minuta']);
 }
 
 function _crearHojaPlatos(ss) {

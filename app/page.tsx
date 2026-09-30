@@ -160,6 +160,7 @@ export default function Home() {
             </button>
             <a href="/generar" className="px-3 py-1.5 bg-blue-700 hover:bg-blue-600 text-sm rounded-lg font-semibold">✨ Generar</a>
             <a href="/catalogos" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">🥩 Catálogos</a>
+            <a href="/historial" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">📋 Historial</a>
             <a href="/subir" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">📂 Subir Excel</a>
             <button onClick={() => window.print()} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">🖨 Imprimir</button>
             <button

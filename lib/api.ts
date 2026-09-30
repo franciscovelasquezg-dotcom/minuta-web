@@ -81,10 +81,19 @@ export interface MinutaAPI {
   dias: DiaAPI[]
 }
 
+export interface HistorialEntry {
+  timestamp: string
+  casino: string
+  fechaInicio: string
+  totalDias: number
+  confirmados: number
+}
+
 export const api = {
   getCatalogos: () => get<Catalogos>('catalogos'),
   getTurnos: () => get<Turno[]>('turnos'),
   getMinuta: (turno: string) => get<MinutaAPI>('minuta', { turno }),
+  getHistorial: (turno: string) => get<HistorialEntry[]>('historial', { turno }),
   guardarMinuta: (data: MinutaAPI) => post<{ ok: boolean }>('guardar_minuta', data),
   nuevoCiclo: (turno: string, fechaInicio: string, casino: string) =>
     post<{ ok: boolean }>('nuevo_ciclo', { turno, fechaInicio, casino, diasMinimosRepeticion: 3 }),
