@@ -123,10 +123,16 @@ export default function CatalogosPage() {
   const [ensaladas, setEnsaladas] = useState<Ensalada[]>([])
   const [acomps, setAcomps] = useState<Acompañamiento[]>([])
   const [cargando, setCargando] = useState(true)
+  const [busqueda, setBusqueda] = useState('')
   const [modalPlato, setModalPlato] = useState<Partial<Plato> | null | false>(false)
   const [modalEnsalada, setModalEnsalada] = useState<Partial<Ensalada> | null | false>(false)
   const [modalAcomp, setModalAcomp] = useState<Partial<Acompañamiento> | null | false>(false)
   const [guardando, setGuardando] = useState(false)
+
+  const q = busqueda.toLowerCase().trim()
+  const platosFiltrados   = q ? platos.filter(p => p.nombre.toLowerCase().includes(q) || p.tipo.toLowerCase().includes(q)) : platos
+  const ensaladasFiltradas = q ? ensaladas.filter(e => e.nombre.toLowerCase().includes(q) || e.tipo.toLowerCase().includes(q)) : ensaladas
+  const acompsFiltrados   = q ? acomps.filter(a => a.nombre.toLowerCase().includes(q) || a.tipo.toLowerCase().includes(q)) : acomps
 
   useEffect(() => {
     api.getCatalogos().then(c => {
@@ -182,6 +188,17 @@ export default function CatalogosPage() {
       </header>
 
       <main className="max-w-screen-xl mx-auto px-4 py-6">
+        {/* Buscador */}
+        <div className="mb-4">
+          <input
+            type="search"
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            placeholder="Buscar por nombre o tipo..."
+            className="w-full max-w-sm border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          />
+        </div>
+
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-white rounded-xl p-1 shadow-sm border border-gray-200 w-fit">
           {([['platos', '🥩 Platos principales'], ['ensaladas', '🥗 Ensaladas'], ['acompañamientos', '🍚 Acompañamientos']] as [Tab, string][]).map(([t, label]) => (
@@ -200,11 +217,11 @@ export default function CatalogosPage() {
             {tab === 'platos' && (
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-500">{platos.length} platos registrados</span>
+                  <span className="text-sm text-gray-500">{platosFiltrados.length} de {platos.length} platos</span>
                   <button onClick={() => setModalPlato(null)} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">+ Nuevo plato</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {platos.map(p => (
+                  {platosFiltrados.map(p => (
                     <div key={p.id} className={`bg-white rounded-xl border border-gray-200 p-4 shadow-sm ${!p.activo ? 'opacity-50' : ''}`}>
                       <div className="flex items-start justify-between mb-2">
                         <div>
@@ -239,11 +256,11 @@ export default function CatalogosPage() {
             {tab === 'ensaladas' && (
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-500">{ensaladas.length} ensaladas registradas</span>
+                  <span className="text-sm text-gray-500">{ensaladasFiltradas.length} de {ensaladas.length} ensaladas</span>
                   <button onClick={() => setModalEnsalada(null)} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">+ Nueva ensalada</button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {ensaladas.map(e => (
+                  {ensaladasFiltradas.map(e => (
                     <div key={e.id} className={`bg-white rounded-xl border border-gray-200 p-3 shadow-sm flex items-start justify-between ${!e.activo ? 'opacity-50' : ''}`}>
                       <div>
                         <p className="text-sm font-medium text-gray-800">{e.nombre}</p>
@@ -260,11 +277,11 @@ export default function CatalogosPage() {
             {tab === 'acompañamientos' && (
               <div>
                 <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-500">{acomps.length} acompañamientos registrados</span>
+                  <span className="text-sm text-gray-500">{acompsFiltrados.length} de {acomps.length} acompañamientos</span>
                   <button onClick={() => setModalAcomp(null)} className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">+ Nuevo acompañamiento</button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {acomps.map(a => (
+                  {acompsFiltrados.map(a => (
                     <div key={a.id} className={`bg-white rounded-xl border border-gray-200 p-3 shadow-sm flex items-start justify-between ${!a.activo ? 'opacity-50' : ''}`}>
                       <div>
                         <p className="text-sm font-medium text-gray-800">{a.nombre}</p>

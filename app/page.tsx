@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { api, Catalogos, MinutaAPI, ServicioAPI, Turno } from '@/lib/api'
+import { generarPDF } from '@/lib/pdf'
 import { detectarRepeticiones } from '@/lib/repeticion'
 import { DiaMinuta, Servicio } from '@/types/minuta'
 import DiaCard from '@/components/DiaCard'
@@ -114,6 +115,38 @@ export default function Home() {
     }
   }
 
+  const copiarCicloAnterior = async () => {
+    if (!minuta || dias.length === 0) return
+    const nuevaFecha = prompt('Fecha de inicio del nuevo ciclo (YYYY-MM-DD):', new Date().toISOString().slice(0, 10))
+    if (!nuevaFecha) return
+    setGuardando(true)
+    try {
+      // Recalcula fechas manteniendo los mismos platos
+      const fecha = new Date(nuevaFecha + 'T12:00:00')
+      const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+      const diasCopiados = dias.map((d, i) => {
+        const f = new Date(fecha)
+        f.setDate(f.getDate() + i)
+        return {
+          ...d,
+          dia: i + 1,
+          fecha: `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}`,
+          diaSemana: DIAS_SEMANA[f.getDay()],
+          servicios: d.servicios.map(s => ({ ...s, estado: 'Por Confirmar' as const })),
+        }
+      })
+      await api.guardarMinuta({ ...minuta, fechaInicio: nuevaFecha, dias: diasCopiados.map(d => ({ ...d, servicios: d.servicios.map(s => s as ServicioAPI) })) })
+      const m = await api.getMinuta(turnoSeleccionado)
+      setMinuta(m)
+      setDias(m.dias.map(apiToDia))
+      alert('Ciclo copiado ✅ — estados reseteados a "Por Confirmar"')
+    } catch (e: unknown) {
+      alert('Error: ' + (e instanceof Error ? e.message : String(e)))
+    } finally {
+      setGuardando(false)
+    }
+  }
+
   const turnoActual = turnos.find(t => t.codigo === turnoSeleccionado)
 
   const semanas: DiaMinuta[][] = []
@@ -162,7 +195,19 @@ export default function Home() {
             <a href="/catalogos" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">🥩 Catálogos</a>
             <a href="/historial" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">📋 Historial</a>
             <a href="/subir" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">📂 Subir Excel</a>
-            <button onClick={() => window.print()} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">🖨 Imprimir</button>
+            {dias.length > 0 && (
+              <button
+                onClick={() => generarPDF(dias, turnoSeleccionado, minuta?.casino || 'Casino', minuta?.fechaInicio || '')}
+                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg"
+              >
+                📄 PDF
+              </button>
+            )}
+            {dias.length > 0 && (
+              <button onClick={copiarCicloAnterior} disabled={guardando} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg disabled:opacity-50">
+                📋 Copiar ciclo
+              </button>
+            )}
             <button
               onClick={async () => { await fetch('/api/auth', { method: 'DELETE' }); window.location.href = '/login' }}
               className="px-3 py-1.5 bg-gray-700 hover:bg-red-700 text-sm rounded-lg text-gray-400 hover:text-white"
@@ -198,16 +243,18 @@ export default function Home() {
                     <h2 className="text-sm font-bold text-gray-600 uppercase tracking-wider mb-3">
                       Semana {si + 1} · {semana[0]?.fecha} al {semana[semana.length - 1]?.fecha}
                     </h2>
-                    <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${semana.length}, minmax(0, 1fr))` }}>
-                      {semana.map((dia, i) => (
-                        <DiaCard
-                          key={dia.dia}
-                          dia={dia}
-                          diaIndex={si * 7 + i}
-                          alertas={alertas}
-                          onChange={handleChange}
-                        />
-                      ))}
+                    <div className="overflow-x-auto pb-2">
+                      <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${semana.length}, minmax(140px, 1fr))`, minWidth: `${semana.length * 148}px` }}>
+                        {semana.map((dia, i) => (
+                          <DiaCard
+                            key={dia.dia}
+                            dia={dia}
+                            diaIndex={si * 7 + i}
+                            alertas={alertas}
+                            onChange={handleChange}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ))}
