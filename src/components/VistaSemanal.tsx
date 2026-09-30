@@ -2,7 +2,7 @@ import { DiaMinuta } from '@/types/minuta'
 
 interface Props {
   dias: DiaMinuta[]
-  semana: 1 | 2
+  semana: number
 }
 
 export default function VistaSemanal({ dias, semana }: Props) {
