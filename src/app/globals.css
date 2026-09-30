@@ -1,6 +1,0 @@
-@import "tailwindcss";
-
-@media print {
-  .print\:hidden { display: none !important; }
-  body { font-size: 11px; }
-}

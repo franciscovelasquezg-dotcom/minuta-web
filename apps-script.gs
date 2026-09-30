@@ -17,7 +17,9 @@ const HOJA_PREFIX_MINUTA   = 'Minuta_';      // Minuta_7x7, Minuta_10x10, etc.
 
 // ── Seguridad HMAC ────────────────────────────────────────────
 function computeHmac(message, secret) {
-  const bytes = Utilities.computeHmacSha256Signature(message, secret);
+  const msgBytes = Utilities.newBlob(String(message)).getBytes();
+  const keyBytes = Utilities.newBlob(String(secret)).getBytes();
+  const bytes = Utilities.computeHmacSha256Signature(msgBytes, keyBytes);
   return bytes.map(b => ('0' + (b & 0xFF).toString(16)).slice(-2)).join('');
 }
 
