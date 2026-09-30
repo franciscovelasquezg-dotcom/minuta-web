@@ -193,7 +193,8 @@ function getMinuta(turno) {
         acompañamiento: r[5] || '',
         platoPrincipal: r[6] || '',
         postre:         r[7] || '',
-        estado:         r[8] || 'Por Confirmar',
+        opcionHipo:     r[8] || '',
+        estado:         r[9] || 'Por Confirmar',
       });
     }
   }
@@ -224,16 +225,16 @@ function guardarMinuta(body) {
   }
 
   hoja.appendRow([turno, fechaInicio, diasMinimosRepeticion, casino]);
-  hoja.appendRow(['Dia', 'Fecha', 'DiaSemana', 'Servicio', 'Ensalada', 'Acompañamiento', 'Plato Principal', 'Postre', 'Estado']);
+  hoja.appendRow(['Dia', 'Fecha', 'DiaSemana', 'Servicio', 'Ensalada', 'Acompañamiento', 'Plato Principal', 'Postre', 'Opcion Hipo', 'Estado']);
 
   (dias || []).forEach(dia => {
     let primera = true;
     (dia.servicios || []).forEach(svc => {
       if (primera) {
-        hoja.appendRow([dia.dia, dia.fecha, dia.diaSemana, svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.postre || '', svc.estado]);
+        hoja.appendRow([dia.dia, dia.fecha, dia.diaSemana, svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.postre || '', svc.opcionHipo || '', svc.estado]);
         primera = false;
       } else {
-        hoja.appendRow(['', '', '', svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.postre || '', svc.estado]);
+        hoja.appendRow(['', '', '', svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.postre || '', svc.opcionHipo || '', svc.estado]);
       }
     });
   });

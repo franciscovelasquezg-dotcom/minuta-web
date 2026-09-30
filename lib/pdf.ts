@@ -29,11 +29,13 @@ export async function generarPDF(dias: DiaMinuta[], turno: string, casino: strin
 
     const almuerzos = semana.map(d => {
       const s = d.servicios.find(sv => sv.tipo === 'Almuerzo')
-      return s ? `${s.platoPrincipal}\n${s.acompañamiento}\n${s.ensalada}${s.postre ? '\n' + s.postre : ''}` : '—'
+      if (!s) return '—'
+      return `${s.platoPrincipal}\n${s.acompañamiento}\n${s.ensalada}${s.postre ? '\n' + s.postre : ''}${s.opcionHipo ? '\n🥗 ' + s.opcionHipo : ''}`
     })
     const cenas = semana.map(d => {
       const s = d.servicios.find(sv => sv.tipo === 'Cena')
-      return s ? `${s.platoPrincipal}\n${s.acompañamiento}\n${s.ensalada}${s.postre ? '\n' + s.postre : ''}` : '—'
+      if (!s) return '—'
+      return `${s.platoPrincipal}\n${s.acompañamiento}\n${s.ensalada}${s.postre ? '\n' + s.postre : ''}${s.opcionHipo ? '\n🥗 ' + s.opcionHipo : ''}`
     })
 
     autoTable(doc, {

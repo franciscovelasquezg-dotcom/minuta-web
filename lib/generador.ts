@@ -206,12 +206,21 @@ export function generarMinuta(
       const postresActivos = POSTRES.filter(p => p !== 'Por Definir')
       const postre = postresActivos[(i * 2 + (tipo === 'Cena' ? 1 : 0)) % postresActivos.length]
 
+      // Opción hipocalórica: bowl de proteína del día + ensalada del día
+      const tipoProteina = clasificarTipo(plato.nombre)
+      const proteinaLabel: Record<string, string> = {
+        vacuno: 'vacuno', cerdo: 'cerdo', pollo: 'pollo',
+        pasta: 'proteína vegetal', legumbre: 'legumbre', otro: 'proteína del día',
+      }
+      const opcionHipo = `Bowl ${proteinaLabel[tipoProteina] || 'proteína del día'} + ${ensalada.nombre}`
+
       servicios.push({
         tipo,
         ensalada: ensalada.nombre,
         acompañamiento: acomp.nombre,
         platoPrincipal: plato.nombre,
         postre,
+        opcionHipo,
         estado: 'Por Confirmar',
       })
     }

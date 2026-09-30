@@ -23,6 +23,7 @@ function apiToDia(d: MinutaAPI['dias'][0]): DiaMinuta {
       acompañamiento: s.acompañamiento,
       platoPrincipal: s.platoPrincipal,
       postre: s.postre || 'Por Definir',
+      opcionHipo: s.opcionHipo || '',
       estado: s.estado as Servicio['estado'],
     })),
   }

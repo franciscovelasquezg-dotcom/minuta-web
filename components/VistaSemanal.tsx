@@ -39,6 +39,9 @@ export default function VistaSemanal({ dias, semana }: Props) {
                       <div className="font-semibold text-gray-800 leading-tight">{svc.platoPrincipal}</div>
                       <div className="text-gray-500 text-[10px]">con {svc.acompañamiento}</div>
                       <div className="text-gray-400 text-[10px] italic">{svc.ensalada}</div>
+                      {svc.opcionHipo && (
+                        <div className="mt-1 text-[9px] text-green-700 bg-green-50 rounded px-1 py-0.5">🥗 {svc.opcionHipo}</div>
+                      )}
                     </td>
                   )
                 })}

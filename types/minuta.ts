@@ -6,6 +6,7 @@ export interface Servicio {
   acompañamiento: string
   platoPrincipal: string
   postre: string
+  opcionHipo: string
   estado: Estado
 }
 

@@ -64,6 +64,16 @@ export default function ServicioCard({ servicio, alerta, onChange }: Props) {
             onChange={(v) => onChange('postre', v)}
           />
         </div>
+        <div className="mt-1 pt-1 border-t border-green-100">
+          <label className="text-[9px] text-green-600 uppercase font-semibold">Opción Hipocalórica</label>
+          <input
+            type="text"
+            value={servicio.opcionHipo || ''}
+            onChange={(e) => onChange('opcionHipo', e.target.value)}
+            placeholder="Bowl proteína + ensalada..."
+            className="w-full text-[10px] text-green-800 bg-green-50 border border-green-200 rounded px-1.5 py-1 mt-0.5 focus:outline-none focus:ring-1 focus:ring-green-400"
+          />
+        </div>
         <div className="pt-0.5">
           <select
             value={servicio.estado}
