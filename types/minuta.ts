@@ -5,6 +5,7 @@ export interface Servicio {
   ensalada: string
   acompañamiento: string
   platoPrincipal: string
+  postre: string
   estado: Estado
 }
 

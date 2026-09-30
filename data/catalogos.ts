@@ -77,4 +77,19 @@ export const ENSALADAS = [
   'Betarraga con Apio',
 ]
 
+export const POSTRES = [
+  'Fruta del tiempo',
+  'Fruta en conserva',
+  'Yogurt natural',
+  'Yogurt con fruta',
+  'Gelatina',
+  'Postre de leche',
+  'Arroz con leche',
+  'Flan',
+  'Panqueque',
+  'Torta de la casa',
+  'Helado',
+  'Por Definir',
+]
+
 export const ESTADOS = ['Confirmado', 'Por Confirmar', 'En Revisión'] as const

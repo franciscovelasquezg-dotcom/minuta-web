@@ -1,29 +1,18 @@
-const URL = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL!
-const SECRET = process.env.APPS_SCRIPT_SECRET || 'MinutaCasino2026_k9M3n7P4q2Z1w5Y6v8U0t3'
-
-// HMAC para POST (solo en servidor)
-async function hmacToken(): Promise<{ t: string; sig: string }> {
-  const t = String(Math.floor(Date.now() / 1000))
-  const enc = new TextEncoder()
-  const key = await crypto.subtle.importKey('raw', enc.encode(SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
-  const buf = await crypto.subtle.sign('HMAC', key, enc.encode(t))
-  const sig = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
-  return { t, sig }
-}
+const SHEETS_URL = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL!
 
 async function get<T>(tipo: string, params: Record<string, string> = {}): Promise<T> {
   const qs = new URLSearchParams({ tipo, ...params })
-  const res = await fetch(`${URL}?${qs}`, { cache: 'no-store' })
+  const res = await fetch(`${SHEETS_URL}?${qs}`, { cache: 'no-store' })
   const json = await res.json()
   if (!json.ok) throw new Error(json.error)
   return json.data
 }
 
 async function post<T>(accion: string, body: object): Promise<T> {
-  const token = await hmacToken()
-  const res = await fetch(URL, {
+  const res = await fetch('/api/sheets', {
     method: 'POST',
-    body: JSON.stringify({ accion, ...token, ...body }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accion, ...body }),
   })
   const json = await res.json()
   if (!json.ok) throw new Error(json.error)
@@ -73,6 +62,7 @@ export interface ServicioAPI {
   ensalada: string
   acompañamiento: string
   platoPrincipal: string
+  postre: string
   estado: string
 }
 

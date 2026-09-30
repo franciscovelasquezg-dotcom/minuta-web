@@ -21,6 +21,7 @@ function apiToDia(d: MinutaAPI['dias'][0]): DiaMinuta {
       ensalada: s.ensalada,
       acompañamiento: s.acompañamiento,
       platoPrincipal: s.platoPrincipal,
+      postre: s.postre || 'Por Definir',
       estado: s.estado as Servicio['estado'],
     })),
   }
@@ -161,6 +162,12 @@ export default function Home() {
             <a href="/catalogos" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">🥩 Catálogos</a>
             <a href="/subir" className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">📂 Subir Excel</a>
             <button onClick={() => window.print()} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-sm rounded-lg">🖨 Imprimir</button>
+            <button
+              onClick={async () => { await fetch('/api/auth', { method: 'DELETE' }); window.location.href = '/login' }}
+              className="px-3 py-1.5 bg-gray-700 hover:bg-red-700 text-sm rounded-lg text-gray-400 hover:text-white"
+            >
+              Salir
+            </button>
           </div>
         </div>
       </header>

@@ -185,11 +185,12 @@ function getMinuta(turno) {
 
     if (diaActual && r[3]) {
       diaActual.servicios.push({
-        tipo:          r[3],
-        ensalada:      r[4] || '',
+        tipo:           r[3],
+        ensalada:       r[4] || '',
         acompañamiento: r[5] || '',
         platoPrincipal: r[6] || '',
-        estado:        r[7] || 'Por Confirmar',
+        postre:         r[7] || '',
+        estado:         r[8] || 'Por Confirmar',
       });
     }
   }
@@ -222,16 +223,16 @@ function guardarMinuta(body) {
   // Fila 0: metadatos
   hoja.appendRow([turno, fechaInicio, diasMinimosRepeticion, casino]);
   // Fila 1: encabezados
-  hoja.appendRow(['Dia', 'Fecha', 'DiaSemana', 'Servicio', 'Ensalada', 'Acompañamiento', 'Plato Principal', 'Estado']);
+  hoja.appendRow(['Dia', 'Fecha', 'DiaSemana', 'Servicio', 'Ensalada', 'Acompañamiento', 'Plato Principal', 'Postre', 'Estado']);
 
   (dias || []).forEach(dia => {
     let primera = true;
     (dia.servicios || []).forEach(svc => {
       if (primera) {
-        hoja.appendRow([dia.dia, dia.fecha, dia.diaSemana, svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.estado]);
+        hoja.appendRow([dia.dia, dia.fecha, dia.diaSemana, svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.postre || '', svc.estado]);
         primera = false;
       } else {
-        hoja.appendRow(['', '', '', svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.estado]);
+        hoja.appendRow(['', '', '', svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.postre || '', svc.estado]);
       }
     });
   });

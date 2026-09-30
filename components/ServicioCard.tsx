@@ -1,7 +1,7 @@
 'use client'
 
 import { Servicio, Estado } from '@/types/minuta'
-import { PLATOS_PRINCIPALES, ACOMPAÑAMIENTOS, ENSALADAS, ESTADOS } from '@/data/catalogos'
+import { PLATOS_PRINCIPALES, ACOMPAÑAMIENTOS, ENSALADAS, POSTRES, ESTADOS } from '@/data/catalogos'
 import SelectField from './SelectField'
 import EstadoBadge from './EstadoBadge'
 
@@ -54,6 +54,14 @@ export default function ServicioCard({ servicio, alerta, onChange }: Props) {
             value={servicio.ensalada}
             options={ENSALADAS}
             onChange={(v) => onChange('ensalada', v)}
+          />
+        </div>
+        <div>
+          <label className="text-[9px] text-gray-400 uppercase">Postre</label>
+          <SelectField
+            value={servicio.postre || 'Por Definir'}
+            options={POSTRES}
+            onChange={(v) => onChange('postre', v)}
           />
         </div>
         <div className="pt-0.5">

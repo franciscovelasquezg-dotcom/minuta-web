@@ -1,4 +1,5 @@
 import { Plato, Ensalada, Acompañamiento, Turno } from './api'
+import { POSTRES } from '@/data/catalogos'
 import { DiaMinuta, Servicio } from '@/types/minuta'
 
 const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
@@ -201,11 +202,16 @@ export function generarMinuta(
       const tipoPlato = clasificarTipo(plato.nombre)
       conteoTipos[tipoPlato] = (conteoTipos[tipoPlato] || 0) + 1
 
+      // Postre rotativo simple
+      const postresActivos = POSTRES.filter(p => p !== 'Por Definir')
+      const postre = postresActivos[(i * 2 + (tipo === 'Cena' ? 1 : 0)) % postresActivos.length]
+
       servicios.push({
         tipo,
         ensalada: ensalada.nombre,
         acompañamiento: acomp.nombre,
         platoPrincipal: plato.nombre,
+        postre,
         estado: 'Por Confirmar',
       })
     }
