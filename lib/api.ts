@@ -20,7 +20,7 @@ async function get<T>(tipo: string, params: Record<string, string> = {}): Promis
 }
 
 async function post<T>(accion: string, body: object): Promise<T> {
-  const token = typeof window === 'undefined' ? await hmacToken() : { t: '', sig: '' }
+  const token = await hmacToken()
   const res = await fetch(URL, {
     method: 'POST',
     body: JSON.stringify({ accion, ...token, ...body }),
