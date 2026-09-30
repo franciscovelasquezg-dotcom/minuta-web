@@ -7,8 +7,9 @@ import { DiaMinuta, Servicio } from '@/types/minuta'
 import DiaCard from '@/components/DiaCard'
 import Resumen from '@/components/Resumen'
 import VistaSemanal from '@/components/VistaSemanal'
+import Analisis from '@/components/Analisis'
 
-type Vista = 'edicion' | 'semanal'
+type Vista = 'edicion' | 'semanal' | 'analisis'
 
 function apiToDia(d: MinutaAPI['dias'][0]): DiaMinuta {
   return {
@@ -149,6 +150,7 @@ export default function Home() {
             <div className="flex rounded-lg overflow-hidden border border-gray-600">
               <button onClick={() => setVista('edicion')} className={`px-3 py-1.5 text-sm ${vista === 'edicion' ? 'bg-blue-600' : 'text-gray-300 hover:bg-gray-700'}`}>Edición</button>
               <button onClick={() => setVista('semanal')} className={`px-3 py-1.5 text-sm ${vista === 'semanal' ? 'bg-blue-600' : 'text-gray-300 hover:bg-gray-700'}`}>Semanal</button>
+              <button onClick={() => setVista('analisis')} className={`px-3 py-1.5 text-sm ${vista === 'analisis' ? 'bg-blue-600' : 'text-gray-300 hover:bg-gray-700'}`}>📊 Análisis</button>
             </div>
 
             <button onClick={crearCiclo} className="px-3 py-1.5 bg-green-700 hover:bg-green-600 text-sm rounded-lg">+ Nuevo ciclo</button>
@@ -199,6 +201,10 @@ export default function Home() {
                   </div>
                 ))}
               </div>
+            )}
+
+            {vista === 'analisis' && (
+              <Analisis dias={dias} diasMinimos={minuta?.diasMinimosRepeticion || 3} />
             )}
 
             {vista === 'semanal' && (
