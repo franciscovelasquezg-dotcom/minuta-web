@@ -450,6 +450,22 @@ function nuevoCiclo(body) {
 }
 
 // ── Inicializar Sheets con estructura y datos base ─────────────
+// ── Fix puntual: corregir acompañamiento Lentejas Españolas ───
+// Ejecutar UNA VEZ desde el editor de Apps Script
+function fixLentejasAcompañamiento() {
+  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const hoja = ss.getSheetByName(HOJA_PLATOS);
+  if (!hoja) { Logger.log('Hoja Platos no encontrada'); return; }
+  const rows = hoja.getDataRange().getValues();
+  for (let i = 1; i < rows.length; i++) {
+    if (String(rows[i][0]) === 'p11' || String(rows[i][1]).toLowerCase().includes('lentejas')) {
+      hoja.getRange(i + 1, 4).setValue('Arroz blanco, Arroz Casero');
+      Logger.log('✅ Corregido fila ' + (i + 1) + ': ' + rows[i][1]);
+    }
+  }
+  SpreadsheetApp.flush();
+}
+
 // Ejecutar UNA VEZ manualmente desde el editor de Apps Script
 
 function inicializarSheets() {
@@ -497,7 +513,7 @@ function _crearHojaPlatos(ss) {
     ['p8',  'Espirales con Cerdo salteado a la Peruana','cerdo',    'Pasta',                                                 '',                                                  true],
     ['p9',  'Espirales con Pollo Navegado (cubitos)',   'pollo',    'Pasta',                                                 '',                                                  true],
     ['p10', 'Estofado de Vacuno',                       'vacuno',   'Arroz blanco,Puré de Papas',                            '',                                                  true],
-    ['p11', 'Lentejas Españolas',                       'legumbre', 'Guiso Casero,Legumbres',                                '',                                                  true],
+    ['p11', 'Lentejas Españolas',                       'legumbre', 'Arroz blanco,Arroz Casero',                           '',                                                  true],
     ['p12', 'Medalla de Cerdo Asada',                   'cerdo',    'Papas Provenzal,Arroz Piamontesa',                      '',                                                  true],
     ['p13', 'Mostaccioli con Tortica',                  'vacuno',   'Pasta,Mostaccioli',                                     '',                                                  true],
     ['p14', 'Mostaccioli en Salsa Bolognesa',           'vacuno',   'Pasta,Mostaccioli',                                     '',                                                  true],
