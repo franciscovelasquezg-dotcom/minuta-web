@@ -206,10 +206,56 @@ const PASOS_DOCX: PasoProgreso[] = [
 const PASOS_PDF: PasoProgreso[] = [
   { label: 'Leyendo archivo', pct: 10 },
   { label: 'Abriendo páginas PDF', pct: 25 },
-  { label: 'Extrayendo texto (sin OCR de imágenes)', pct: 55 },
+  { label: 'Extrayendo texto', pct: 40 },
   { label: 'Detectando días y servicios', pct: 75 },
   { label: 'Generando informe de variedad', pct: 90 },
 ]
+const PASOS_PDF_OCR: PasoProgreso[] = [
+  { label: 'Leyendo archivo', pct: 8 },
+  { label: 'Abriendo páginas PDF', pct: 15 },
+  { label: 'Sin texto digital — convirtiendo a imagen', pct: 22 },
+  { label: 'Reconociendo texto con OCR (puede tardar)', pct: 70 },
+  { label: 'Detectando días y servicios', pct: 85 },
+  { label: 'Generando informe de variedad', pct: 92 },
+]
+const PASOS_IMG: PasoProgreso[] = [
+  { label: 'Leyendo foto', pct: 10 },
+  { label: 'Reconociendo texto con OCR (puede tardar)', pct: 70 },
+  { label: 'Detectando días y servicios', pct: 85 },
+  { label: 'Generando informe de variedad', pct: 92 },
+]
+
+async function ocrImagenes(images: (HTMLCanvasElement | File)[], onProgress: (pct: number) => void): Promise<string> {
+  const Tesseract = await import('tesseract.js')
+  let texto = ''
+  for (let i = 0; i < images.length; i++) {
+    const { data } = await Tesseract.recognize(images[i], 'spa', {
+      logger: (m: { status: string; progress: number }) => {
+        if (m.status === 'recognizing text') {
+          const pctGlobal = ((i + m.progress) / images.length) * 100
+          onProgress(pctGlobal)
+        }
+      },
+    })
+    texto += data.text + '\n'
+  }
+  return texto
+}
+
+async function renderPdfPaginasACanvas(pdf: { numPages: number; getPage: (n: number) => Promise<unknown> }): Promise<HTMLCanvasElement[]> {
+  const canvases: HTMLCanvasElement[] = []
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i) as { getViewport: (opts: { scale: number }) => { width: number; height: number }; render: (opts: { canvasContext: CanvasRenderingContext2D; viewport: unknown }) => { promise: Promise<void> } }
+    const viewport = page.getViewport({ scale: 2.5 })
+    const canvas = document.createElement('canvas')
+    canvas.width = viewport.width
+    canvas.height = viewport.height
+    const ctx = canvas.getContext('2d')!
+    await page.render({ canvasContext: ctx, viewport }).promise
+    canvases.push(canvas)
+  }
+  return canvases
+}
 
 export default function SubirPage() {
   const [informe, setInforme] = useState<Informe | null>(null)
@@ -220,9 +266,12 @@ export default function SubirPage() {
   const [tab, setTab] = useState<'resumen' | 'platos' | 'proteinas' | 'ensaladas' | 'semanas'>('resumen')
   const [pasoActual, setPasoActual] = useState(0)
   const [pasos, setPasos] = useState<PasoProgreso[]>([])
+  const [pctOcr, setPctOcr] = useState<number | null>(null)
+
+  const EXTENSIONES_IMAGEN = ['jpg', 'jpeg', 'png', 'webp']
 
   const procesar = async (file: File) => {
-    setError(''); setCargando(true); setArchivoNombre(file.name); setPasoActual(0)
+    setError(''); setCargando(true); setArchivoNombre(file.name); setPasoActual(0); setPctOcr(null)
     try {
       const ext = file.name.split('.').pop()?.toLowerCase() || ''
       let dias: DiaParsed[] = []
@@ -239,14 +288,28 @@ export default function SubirPage() {
         setPasoActual(2)
         dias = parsearTextoLibre(texto, file.name)
         setPasoActual(3)
+      } else if (EXTENSIONES_IMAGEN.includes(ext)) {
+        setPasos(PASOS_IMG)
+        setPasoActual(0)
+        setPasoActual(1)
+        const texto = await ocrImagenes([file], pct => setPctOcr(pct))
+        setPctOcr(null)
+        if (texto.trim().length < 15) {
+          setError('No se pudo reconocer texto en la foto. Asegúrate de que esté enfocada, con buena luz y sin inclinación — o ingresa la minuta manualmente en el Planificador.')
+          return
+        }
+        setPasoActual(2)
+        dias = parsearTextoLibre(texto, file.name)
+        setPasoActual(3)
       } else if (ext === 'pdf') {
-        setPasos(PASOS_PDF)
         setPasoActual(0)
         const pdfjsLib = await import('pdfjs-dist')
         pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`
         const ab = await file.arrayBuffer()
-        setPasoActual(1)
         const pdf = await pdfjsLib.getDocument({ data: ab }).promise
+
+        setPasos(PASOS_PDF)
+        setPasoActual(1)
         let texto = ''
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i)
@@ -254,21 +317,35 @@ export default function SubirPage() {
           texto += content.items.map((item) => ('str' in item ? item.str : '')).join('\n') + '\n'
         }
         setPasoActual(2)
+
         if (texto.trim().length < 20) {
-          setError('Este PDF parece ser una imagen o foto escaneada (ej. captura de WhatsApp) sin texto digital. Este importador aún no hace OCR de imágenes — sube el .xlsx, .docx, o ingresa la minuta manualmente en el Planificador.')
-          return
+          // PDF sin texto digital (foto/escaneo) → fallback a OCR real
+          setPasos(PASOS_PDF_OCR)
+          setPasoActual(2)
+          const canvases = await renderPdfPaginasACanvas(pdf as unknown as { numPages: number; getPage: (n: number) => Promise<unknown> })
+          setPasoActual(3)
+          texto = await ocrImagenes(canvases, pct => setPctOcr(pct))
+          setPctOcr(null)
+          if (texto.trim().length < 15) {
+            setError('No se pudo reconocer texto en este PDF escaneado. Asegúrate de que la foto/escaneo esté enfocado y con buena luz — o ingresa la minuta manualmente en el Planificador.')
+            return
+          }
+          setPasoActual(4)
+          dias = parsearTextoLibre(texto, file.name)
+          setPasoActual(5)
+        } else {
+          setPasoActual(3)
+          dias = parsearTextoLibre(texto, file.name)
+          setPasoActual(4)
         }
-        setPasoActual(3)
-        dias = parsearTextoLibre(texto, file.name)
-        setPasoActual(4)
       } else {
-        setError('Formato no soportado. Usa .xlsx, .xls, .docx o .pdf'); return
+        setError('Formato no soportado. Usa .xlsx, .xls, .docx, .pdf, .jpg o .png'); return
       }
       if (dias.length === 0) { setError('No se encontraron días. Verifica que el archivo tenga estructura de minuta.'); return }
       setInforme(generarInforme(dias, file.name)); setTab('resumen')
     } catch (e) {
       console.error(e); setError('Error leyendo el archivo. Verifica que sea un archivo de minuta válido.')
-    } finally { setCargando(false) }
+    } finally { setCargando(false); setPctOcr(null) }
   }
 
   const onDrop = useCallback((e: React.DragEvent) => {
@@ -342,7 +419,7 @@ export default function SubirPage() {
                 <span className="text-slate-400">Versión Heurística 2.4</span>
               </div>
               <h1 className="text-[28px] font-bold text-white tracking-tight leading-9">Importar Minuta Externa</h1>
-              <p className="text-[14px] text-slate-400">Sube archivos en Excel (.xlsx), Word (.docx) o PDF para digitalizar minutas automáticamente mediante escaneo heurístico y mapeo inteligente al catálogo de faena.</p>
+              <p className="text-[14px] text-slate-400">Sube archivos en Excel (.xlsx), Word (.docx), PDF o una foto (.jpg/.png) para digitalizar minutas automáticamente mediante escaneo heurístico, OCR y mapeo inteligente al catálogo de faena.</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <a href="#" className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-slate-300 hover:text-white transition-colors text-[13px] font-semibold" style={{ background: '#1E293B', border: '1px solid #334155' }}>
@@ -372,8 +449,9 @@ export default function SubirPage() {
                   <div className="flex flex-col items-center gap-4 text-slate-300 text-sm w-full max-w-sm">
                     <div className="w-10 h-10 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                     <span className="font-semibold text-white">{pasos[pasoActual]?.label || 'Analizando minuta...'}</span>
+                    {pctOcr !== null && <span className="text-[11px] text-emerald-400 font-bold -mt-2">{Math.round(pctOcr)}% reconocido</span>}
                     <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: '#0F172A', border: '1px solid #334155' }}>
-                      <div className="h-full rounded-full bg-emerald-500 transition-all duration-500 ease-out" style={{ width: `${pasos[pasoActual]?.pct || 10}%`, boxShadow: '0 0 8px rgba(16,185,129,0.6)' }} />
+                      <div className="h-full rounded-full bg-emerald-500 transition-all duration-300 ease-out" style={{ width: `${pctOcr !== null && pasos[pasoActual + 1] ? pasos[pasoActual].pct + (pasos[pasoActual + 1].pct - pasos[pasoActual].pct) * (pctOcr / 100) : pasos[pasoActual]?.pct || 10}%`, boxShadow: '0 0 8px rgba(16,185,129,0.6)' }} />
                     </div>
                     <div className="flex flex-col gap-1 w-full">
                       {pasos.map((p, i) => (
@@ -394,7 +472,7 @@ export default function SubirPage() {
                     <h3 className="font-bold text-white text-[16px] mb-1">Arrastra tu archivo aquí o haz clic para explorar</h3>
                     <p className="text-slate-400 text-[13px] max-w-md mb-4">Soporta planillas operativas, minutas escaneadas o circulares oficiales con segmentación por turnos de faena.</p>
                     <div className="flex items-center gap-2 flex-wrap justify-center mb-4">
-                      {[{ icon: 'table_chart', label: 'Excel .xlsx / .xls', color: 'text-emerald-400' }, { icon: 'article', label: 'Word .docx / .doc', color: 'text-slate-400' }, { icon: 'picture_as_pdf', label: 'PDF (OCR)', color: 'text-amber-400' }].map(f => (
+                      {[{ icon: 'table_chart', label: 'Excel .xlsx / .xls', color: 'text-emerald-400' }, { icon: 'article', label: 'Word .docx / .doc', color: 'text-slate-400' }, { icon: 'picture_as_pdf', label: 'PDF (OCR)', color: 'text-amber-400' }, { icon: 'photo_camera', label: 'Foto .jpg / .png (OCR)', color: 'text-sky-400' }].map(f => (
                         <span key={f.label} className="inline-flex items-center gap-1 px-2 py-1 rounded text-slate-300 text-[11px] font-bold" style={{ background: '#0F172A', border: '1px solid #334155' }}>
                           <span className={`material-symbols-outlined text-[14px] ${f.color}`}>{f.icon}</span>
                           {f.label}
@@ -404,7 +482,7 @@ export default function SubirPage() {
                     <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[13px] font-semibold transition-colors" style={{ boxShadow: '0 4px 6px -1px rgba(16,185,129,0.25)' }}>
                       <span className="material-symbols-outlined text-[18px]">folder_open</span>
                       <span>Seleccionar archivo</span>
-                      <input type="file" accept=".xlsx,.xls,.docx,.pdf" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) procesar(f) }} />
+                      <input type="file" accept=".xlsx,.xls,.docx,.pdf,.jpg,.jpeg,.png,.webp" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) procesar(f) }} />
                     </label>
                     {archivoNombre && <p className="text-[11px] text-slate-400 mt-2">Archivo actual: <strong className="text-slate-200">{archivoNombre}</strong></p>}
                   </>
