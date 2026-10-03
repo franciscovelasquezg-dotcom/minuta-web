@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-container": "#e5eeff", "inverse-on-surface": "#eaf1ff", "on-primary-fixed": "#002114", "on-secondary": "#ffffff", "surface-bright": "#f8f9ff", "secondary-container": "#dae2fd", "error": "#ba1a1a", "inverse-primary": "#68dba9", "surface-container-lowest": "#ffffff", "on-primary-container": "#f5fff7", "tertiary-fixed": "#ffddb8", "surface-variant": "#d3e4fe", "tertiary-fixed-dim": "#ffb95f", "primary": "#006948", "on-primary": "#ffffff", "primary-fixed-dim": "#68dba9", "on-secondary-fixed": "#131b2e", "tertiary-container": "#a36700", "surface-dim": "#cbdbf5", "on-error-container": "#93000a", "tertiary": "#825100", "surface-container-high": "#dce9ff", "outline-variant": "#bccac0", "secondary-fixed": "#dae2fd", "on-tertiary-fixed-variant": "#653e00", "on-error": "#ffffff", "surface-container-highest": "#d3e4fe", "on-tertiary-fixed": "#2a1700", "on-secondary-container": "#5c647a", "secondary": "#565e74", "on-surface-variant": "#3d4a42", "surface-container-low": "#eff4ff", "surface-tint": "#006c4a", "on-surface": "#0b1c30", "inverse-surface": "#213145", "on-secondary-fixed-variant": "#3f465c", "primary-fixed": "#85f8c4", "secondary-fixed-dim": "#bec6e0", "error-container": "#ffdad6", "on-background": "#0b1c30", "on-tertiary-container": "#fffbff", "on-primary-fixed-variant": "#005137", "on-tertiary": "#ffffff", "outline": "#6d7a72", "background": "#f8f9ff", "primary-container": "#00855d", "surface": "#f8f9ff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-xs": "0.25rem", "space-lg": "1.25rem", "space-md": "0.75rem", "space-sm": "0.5rem", "space-xl": "2rem", "margin": "1rem", "gutter-desktop": "1.5rem", "margin-desktop": "2rem", "gutter": "1rem" }, "fontFamily": { "headline-lg": [ "Plus Jakarta Sans" ], "headline-sm": [ "Plus Jakarta Sans" ], "body-md": [ "Manrope" ], "label-sm": [ "Manrope" ], "label-md": [ "Manrope" ], "display-lg": [ "Plus Jakarta Sans" ], "body-sm": [ "Manrope" ], "data-tabular": [ "Manrope" ], "headline-lg-mobile": [ "Plus Jakarta Sans" ], "body-lg": [ "Manrope" ], "headline-md": [ "Plus Jakarta Sans" ] }, "fontSize": { "headline-lg": [ "28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "700" } ], "headline-sm": [ "16px", { "lineHeight": "24px", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "fontWeight": "400" } ], "label-sm": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" } ], "label-md": [ "13px", { "lineHeight": "18px", "fontWeight": "600" } ], "display-lg": [ "36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "body-sm": [ "12px", { "lineHeight": "16px", "fontWeight": "400" } ], "data-tabular": [ "13px", { "lineHeight": "18px", "fontWeight": "600" } ], "headline-lg-mobile": [ "22px", { "lineHeight": "28px", "fontWeight": "700" } ], "body-lg": [ "16px", { "lineHeight": "24px", "fontWeight": "400" } ], "headline-md": [ "20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" } ] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 bg-surface-container-lowest shadow-[0_1px_8px_rgba(15,23,42,0.06)]"><div class="h-16 w-full px-margin-desktop flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md shrink-0"><img alt="Minuta Web Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UErP-3CU3n55PBNt7RaM8V4U1jxcjLzdScMddTqXhLJfCGQx85Bn185QPbxPe6IetlGgRxFI2SSgux4_4jNENuxEwwPV1zNZJQl73mxDbriJbXXyzVthP9rSi_8r3sVzPWcJTh0AWyo3re8UBDoor3uXeTI-T7zmyn2F0w29MoGLLen9QxV9zLuRcBVS45bD_yUO8sGTWblf7Oz59Yo-ni_N1xpO-6rpmQQoHNSbVz2x7ujbBmWvRqG1Bu"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Minuta Web</span><span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Faena</span></div><span class="font-body-sm text-body-sm text-secondary">Casino de Faena</span></div></div><nav class="hidden xl:flex items-center gap-space-xs shrink-0" data-active-classes="bg-surface-container text-primary font-headline-sm rounded-lg"><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="planificador" href="#">Planificador</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="generar-ia" href="#">Generar IA</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="catalogos" href="#">Catálogos</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="importar-archivos" href="#">Importar Archivos</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="historial" href="#">Historial</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="analisis-nutricional" href="#">Análisis Nutricional</a></nav><div class="flex items-center gap-space-md shrink-0"><div class="relative flex items-center bg-surface-container-low rounded-lg px-space-md py-1.5"><span class="material-symbols-outlined text-secondary text-[18px] mr-1.5">apartment</span><select class="bg-transparent font-label-md text-label-md text-on-surface focus:outline-none cursor-pointer pr-space-xs"><option selected="" value="spence">Casino Central Spence</option><option value="escondida">Casino Escondida Norte</option><option value="caracoles">Campamento Caracoles</option></select></div><button class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">download</span><span>Exportar PDF</span></button><button class="relative p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMSd9yx3DDIrfBhPbwPT0kmMDD9X2gmbLUMpumg9Y5_6dflBdGvLrL5I-NN9Nozo7v9Bh8-lnmNO15dTv93J86fiJwtRyVUnRgIdEUtEiTqNRjmi_vDP0sZ_v1laVUlP3PNUJJ4XO9FHiG7PbFAzt-mCtUsTffDBZ-IJxiegPBmrLgADu1N4AaFkGOm8xSLHmZPDT2c8Rpb2VOaQHlCobn4d8xHwSTzfcgkCF3XqyPIIIjoJV4EHCytQ"/><div class="hidden 2xl:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface leading-tight">Alejandra Morales</span><span class="font-body-sm text-body-sm text-secondary leading-tight">Sup. Casino</span></div></div></div></div></header><main class="w-full pt-16 bg-background"><div class="flex flex-col w-full">
+<!-- Top Command Banner / Ambient Status Ribbon -->
+<div class="px-margin-desktop py-space-md bg-surface-container-low flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-2 px-space-sm py-1 bg-surface-container rounded-full text-on-surface-variant font-label-sm text-label-sm tracking-wider uppercase">
+<span class="inline-block w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span>Maestro Activo • Rev 2025.4</span>
+</div>
+<div class="hidden lg:flex items-center gap-space-xs text-secondary font-body-sm text-body-sm">
+<span>Faena Spence (2.400 msnm)</span>
+<span>•</span>
+<span>Acreditación HACCP Operativa</span>
+</div>
+</div>
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-xs text-secondary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[18px] text-primary">verified_user</span>
+<span>Gramajes y Alérgenos Estandarizados</span>
+</div>
+<div class="h-3 w-px bg-surface-container-high hidden sm:block"></div>
+<span class="font-data-tabular text-data-tabular text-on-surface-variant">Última sync: Hoy, 05:40 AM</span>
+</div>
+</div>
+<!-- Primary Page Header & Action Deck -->
+<div class="px-margin-desktop pt-space-lg pb-space-md flex flex-col md:flex-row md:items-end justify-between gap-space-lg">
+<div class="flex flex-col gap-1 max-w-3xl">
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary font-bold">Módulo de Producción &amp; Dietética</span>
+<span class="text-secondary text-xs">•</span>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-wider">Fichas Técnicas Calificadas</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Catálogos Maestros de Casino</h1>
+<p class="font-body-md text-body-md text-secondary">
+        Base de datos homologada de recetas, proteínas, acompañamientos y parámetros de faena para servicios de alto rendimiento.
+      </p>
+</div>
+<!-- Quick Actions Deck -->
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="inline-flex items-center gap-2 px-space-md py-2.5 rounded bg-surface-container text-on-surface-variant font-label-md text-label-md hover:bg-surface-container-high transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span>Historial de Versiones</span>
+</button>
+<button class="inline-flex items-center gap-2 px-space-lg py-2.5 rounded bg-primary text-on-primary font-headline-sm text-headline-sm hover:bg-primary-container shadow-md transition-all active:scale-[0.98]" id="btn-add-recipe" type="button">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span>+ Agregar Nuevo Plato</span>
+</button>
+</div>
+</div>
+<!-- Master Metric Tiles Strip (Operational Overview) -->
+<div class="px-margin-desktop py-space-sm">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Metric 1 -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Platos Registrados</span>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-display-lg text-display-lg text-on-surface leading-none">21</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">100% Homologados</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">restaurant_menu</span>
+</div>
+</div>
+<!-- Metric 2 -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Estado Operativo</span>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-display-lg text-display-lg text-on-surface leading-none">19</span>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Activos</span>
+<span class="text-secondary font-label-sm text-label-sm">/ 2 En Revisión</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">check_circle</span>
+</div>
+</div>
+<!-- Metric 3 -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Aporte Calórico Promedio</span>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-display-lg text-display-lg text-on-surface leading-none font-data-tabular">820</span>
+<span class="font-label-sm text-label-sm text-secondary">kcal / ración</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[22px]">bolt</span>
+</div>
+</div>
+<!-- Metric 4 -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Acompañamientos Activos</span>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-display-lg text-display-lg text-on-surface leading-none">18</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Guarniciones base</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[22px]">skillet</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Navigation Tabs Strip -->
+<div class="px-margin-desktop mt-space-md">
+<div class="flex items-center gap-space-xs overflow-x-auto no-scrollbar border-b-2 border-surface-container">
+<button class="relative pb-space-sm pt-2 px-space-md font-headline-sm text-headline-sm text-primary whitespace-nowrap flex items-center gap-2 group" type="button">
+<span class="material-symbols-outlined text-[20px]">dinner_dining</span>
+<span>Platos Principales</span>
+<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-primary text-on-primary">21</span>
+<span class="absolute bottom-[-2px] left-0 right-0 h-[3px] bg-primary rounded-t-full"></span>
+</button>
+<button class="relative pb-space-sm pt-2 px-space-md font-headline-sm text-headline-sm text-secondary hover:text-on-surface whitespace-nowrap flex items-center gap-2 transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">rice_bowl</span>
+<span>Acompañamientos</span>
+<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-surface-container text-secondary">18</span>
+</button>
+<button class="relative pb-space-sm pt-2 px-space-md font-headline-sm text-headline-sm text-secondary hover:text-on-surface whitespace-nowrap flex items-center gap-2 transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">nutrition</span>
+<span>Ensaladas</span>
+<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-surface-container text-secondary">15</span>
+</button>
+<button class="relative pb-space-sm pt-2 px-space-md font-headline-sm text-headline-sm text-secondary hover:text-on-surface whitespace-nowrap flex items-center gap-2 transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+<span>Turnos y Jornadas</span>
+<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-surface-container text-secondary">4</span>
+</button>
+<button class="relative pb-space-sm pt-2 px-space-md font-headline-sm text-headline-sm text-secondary hover:text-on-surface whitespace-nowrap flex items-center gap-2 transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">icecream</span>
+<span>Postres y Opciones Saludables</span>
+<span class="px-2 py-0.5 text-xs font-bold rounded-full bg-surface-container text-secondary">12</span>
+</button>
+</div>
+</div>
+<!-- Filter & Operational Toolbar -->
+<div class="px-margin-desktop py-space-md">
+<div class="p-space-md rounded-xl bg-surface-container-lowest shadow-sm flex flex-col gap-space-md">
+<!-- Search and Status row -->
+<div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+<!-- Search Input -->
+<div class="relative flex-1 min-w-[280px]">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[20px]">search</span>
+<input class="w-full pl-10 pr-space-md py-2 text-body-md font-body-md text-on-surface bg-surface-container-low rounded-lg focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary transition-all placeholder:text-secondary" id="table-search" placeholder="Buscar receta, ingrediente o código de ficha..." type="text"/>
+</div>
+<!-- Quick filter badges: Status & Counter -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<span class="text-secondary font-label-sm text-label-sm uppercase tracking-wider">Estado:</span>
+<div class="inline-flex p-1 bg-surface-container-low rounded-lg">
+<button class="px-space-md py-1 rounded font-label-md text-label-md bg-surface-container-lowest text-primary shadow-xs font-bold" type="button">
+              Activos (19)
+            </button>
+<button class="px-space-md py-1 rounded font-label-md text-label-md text-secondary hover:text-on-surface transition-colors" type="button">
+              Inactivos (2)
+            </button>
+</div>
+<div class="h-6 w-px bg-surface-container hidden sm:block"></div>
+<!-- Quick stats Pill -->
+<div class="flex items-center gap-2 px-space-md py-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px] text-primary">inventory_2</span>
+<span>21 platos disponibles • 5 categorías de proteínas</span>
+</div>
+</div>
+</div>
+<!-- Protein Category Pills -->
+<div class="flex flex-wrap items-center gap-space-xs pt-space-xs">
+<span class="text-secondary font-label-sm text-label-sm uppercase tracking-wider mr-2">Proteína:</span>
+<button class="protein-filter-btn px-space-md py-1 rounded-full text-label-md font-label-md bg-primary text-on-primary transition-all shadow-xs" data-category="all" type="button">
+          Todos (21)
+        </button>
+<button class="protein-filter-btn px-space-md py-1 rounded-full text-label-md font-label-md bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all flex items-center gap-1.5" data-category="vacuno" type="button">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+<span>Vacuno</span>
+<span class="font-data-tabular text-secondary text-xs">(8)</span>
+</button>
+<button class="protein-filter-btn px-space-md py-1 rounded-full text-label-md font-label-md bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all flex items-center gap-1.5" data-category="pollo" type="button">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim"></span>
+<span>Pollo</span>
+<span class="font-data-tabular text-secondary text-xs">(5)</span>
+</button>
+<button class="protein-filter-btn px-space-md py-1 rounded-full text-label-md font-label-md bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all flex items-center gap-1.5" data-category="cerdo" type="button">
+<span class="w-2.5 h-2.5 rounded-full bg-error-container"></span>
+<span>Cerdo</span>
+<span class="font-data-tabular text-secondary text-xs">(3)</span>
+</button>
+<button class="protein-filter-btn px-space-md py-1 rounded-full text-label-md font-label-md bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all flex items-center gap-1.5" data-category="pasta" type="button">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary"></span>
+<span>Pasta</span>
+<span class="font-data-tabular text-secondary text-xs">(3)</span>
+</button>
+<button class="protein-filter-btn px-space-md py-1 rounded-full text-label-md font-label-md bg-surface-container-low text-on-surface-variant hover:bg-surface-container transition-all flex items-center gap-1.5" data-category="legumbres" type="button">
+<span class="w-2.5 h-2.5 rounded-full bg-primary-container"></span>
+<span>Legumbres</span>
+<span class="font-data-tabular text-secondary text-xs">(2)</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Master Data Table Section -->
+<div class="px-margin-desktop pb-space-lg">
+<div class="w-full bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[1040px]">
+<thead>
+<tr class="bg-surface-container-low text-secondary text-label-sm font-label-sm uppercase tracking-wider">
+<th class="py-space-md px-space-lg font-bold w-[26%]" scope="col">Nombre del Plato</th>
+<th class="py-space-md px-space-md font-bold w-[14%]" scope="col">Categoría / Tipo</th>
+<th class="py-space-md px-space-md font-bold w-[22%]" scope="col">Acompañamientos Sugeridos</th>
+<th class="py-space-md px-space-md font-bold w-[24%]" scope="col">Receta / Especificación Operativa</th>
+<th class="py-space-md px-space-sm font-bold text-center w-[6%]" scope="col">Estado</th>
+<th class="py-space-md px-space-lg font-bold text-right w-[8%]" scope="col">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low font-body-md text-body-md text-on-surface">
+<!-- ROW 1 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors group">
+<td class="py-space-md px-space-lg align-top">
+<div class="flex items-start gap-3">
+<div class="w-1.5 h-12 rounded-full bg-error shrink-0 mt-0.5"></div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">ASADO TRADICIONAL A LAS BRASAS</span>
+</div>
+<div class="flex items-center gap-2 mt-1">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-tertiary-fixed text-on-tertiary-fixed">Especial Domingo</span>
+<span class="text-secondary font-label-sm text-label-sm font-data-tabular">Ficha: #SPN-VAC-014</span>
+</div>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-col items-start gap-1">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm uppercase tracking-wide bg-error/10 text-error font-bold">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                    Vacuno
+                  </span>
+<span class="font-body-sm text-body-sm text-secondary">Corte Premium Faena</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Parrilla / Carbón</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Papas Rústicas</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Ensalada Chilena</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<p class="font-body-sm text-body-sm text-secondary line-clamp-2 leading-relaxed">
+                  Corte de tira y lomo liso marinados, cocción a fuego lento en brasas para servicio nocturno de faena.
+                </p>
+<div class="flex items-center gap-3 mt-1.5 text-secondary font-label-sm text-label-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 180 min</span>
+<span>•</span>
+<span class="flex items-center gap-1 font-data-tabular"><span class="material-symbols-outlined text-[14px]">scale</span> 280g ración</span>
+</div>
+</td>
+<td class="py-space-md px-space-sm align-top text-center">
+<button aria-checked="true" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-primary transition-colors duration-200 ease-in-out focus:outline-none" role="switch" type="button">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out mt-1 ml-0.5"></span>
+</button>
+<span class="block text-[10px] font-bold text-primary uppercase tracking-wider mt-0.5">Activo</span>
+</td>
+<td class="py-space-md px-space-lg align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Editar Ficha" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Ver Ficha Técnica PDF" type="button">
+<span class="material-symbols-outlined text-[18px]">description</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-error hover:bg-error-container/40 transition-colors" title="Desactivar / Eliminar" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 2 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors group">
+<td class="py-space-md px-space-lg align-top">
+<div class="flex items-start gap-3">
+<div class="w-1.5 h-12 rounded-full bg-error shrink-0 mt-0.5"></div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Carne Mechada en su Salsa</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-secondary font-label-sm text-label-sm font-data-tabular">Ficha: #SPN-VAC-008</span>
+<span class="text-secondary text-xs">•</span>
+<span class="text-secondary font-body-sm text-body-sm">Posta Negra / Choclillo</span>
+</div>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-col items-start gap-1">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm uppercase tracking-wide bg-error/10 text-error font-bold">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                    Vacuno
+                  </span>
+<span class="font-body-sm text-body-sm text-secondary">Estofado Base</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Puré de Papas</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Spaghetti al Burro</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<p class="font-body-sm text-body-sm text-secondary line-clamp-2 leading-relaxed">
+                  Carne desmechada cocinada a fuego lento con mirepoix, caldo de res y laurel.
+                </p>
+<div class="flex items-center gap-3 mt-1.5 text-secondary font-label-sm text-label-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 120 min</span>
+<span>•</span>
+<span class="flex items-center gap-1 font-data-tabular"><span class="material-symbols-outlined text-[14px]">scale</span> 220g ración</span>
+</div>
+</td>
+<td class="py-space-md px-space-sm align-top text-center">
+<button aria-checked="true" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-primary transition-colors duration-200 ease-in-out focus:outline-none" role="switch" type="button">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out mt-1 ml-0.5"></span>
+</button>
+<span class="block text-[10px] font-bold text-primary uppercase tracking-wider mt-0.5">Activo</span>
+</td>
+<td class="py-space-md px-space-lg align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Editar Ficha" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Ver Ficha Técnica PDF" type="button">
+<span class="material-symbols-outlined text-[18px]">description</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-error hover:bg-error-container/40 transition-colors" title="Desactivar / Eliminar" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 3 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors group">
+<td class="py-space-md px-space-lg align-top">
+<div class="flex items-start gap-3">
+<div class="w-1.5 h-12 rounded-full bg-tertiary-fixed-dim shrink-0 mt-0.5"></div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Pollo Salteado a la Peruana</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-secondary font-label-sm text-label-sm font-data-tabular">Ficha: #SPN-POL-003</span>
+<span class="text-secondary text-xs">•</span>
+<span class="text-secondary font-body-sm text-body-sm">Wok Industrial</span>
+</div>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-col items-start gap-1">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm uppercase tracking-wide bg-tertiary-fixed-dim/20 text-tertiary font-bold">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+                    Pollo
+                  </span>
+<span class="font-body-sm text-body-sm text-secondary">Salteado Rápido</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Arroz Chaufa</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Papas Fritas Caseras</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<p class="font-body-sm text-body-sm text-secondary line-clamp-2 leading-relaxed">
+                  Tiras de pechuga salteadas al wok con cebolla morada, tomate y sillao.
+                </p>
+<div class="flex items-center gap-3 mt-1.5 text-secondary font-label-sm text-label-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 45 min</span>
+<span>•</span>
+<span class="flex items-center gap-1 font-data-tabular"><span class="material-symbols-outlined text-[14px]">scale</span> 240g ración</span>
+</div>
+</td>
+<td class="py-space-md px-space-sm align-top text-center">
+<button aria-checked="true" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-primary transition-colors duration-200 ease-in-out focus:outline-none" role="switch" type="button">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out mt-1 ml-0.5"></span>
+</button>
+<span class="block text-[10px] font-bold text-primary uppercase tracking-wider mt-0.5">Activo</span>
+</td>
+<td class="py-space-md px-space-lg align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Editar Ficha" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Ver Ficha Técnica PDF" type="button">
+<span class="material-symbols-outlined text-[18px]">description</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-error hover:bg-error-container/40 transition-colors" title="Desactivar / Eliminar" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 4 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors group">
+<td class="py-space-md px-space-lg align-top">
+<div class="flex items-start gap-3">
+<div class="w-1.5 h-12 rounded-full bg-primary-container shrink-0 mt-0.5"></div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Lentejas Españolas con Chorizo</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-secondary font-label-sm text-label-sm font-data-tabular">Ficha: #SPN-LEG-002</span>
+<span class="text-secondary text-xs">•</span>
+<span class="text-secondary font-body-sm text-body-sm">Plato de Cuchara</span>
+</div>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-col items-start gap-1">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm uppercase tracking-wide bg-primary/10 text-primary font-bold">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                    Legumbres
+                  </span>
+<span class="font-body-sm text-body-sm text-secondary">Guiso Calórico</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Arroz Blanco Graneado</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<p class="font-body-sm text-body-sm text-secondary line-clamp-2 leading-relaxed">
+                  Lentejas estofadas con chorizo artesanal, zanahoria, zapallo camote y pimentón.
+                </p>
+<div class="flex items-center gap-3 mt-1.5 text-secondary font-label-sm text-label-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 90 min</span>
+<span>•</span>
+<span class="flex items-center gap-1 font-data-tabular"><span class="material-symbols-outlined text-[14px]">scale</span> 350g porción</span>
+</div>
+</td>
+<td class="py-space-md px-space-sm align-top text-center">
+<button aria-checked="true" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-primary transition-colors duration-200 ease-in-out focus:outline-none" role="switch" type="button">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out mt-1 ml-0.5"></span>
+</button>
+<span class="block text-[10px] font-bold text-primary uppercase tracking-wider mt-0.5">Activo</span>
+</td>
+<td class="py-space-md px-space-lg align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Editar Ficha" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Ver Ficha Técnica PDF" type="button">
+<span class="material-symbols-outlined text-[18px]">description</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-error hover:bg-error-container/40 transition-colors" title="Desactivar / Eliminar" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 5 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors group">
+<td class="py-space-md px-space-lg align-top">
+<div class="flex items-start gap-3">
+<div class="w-1.5 h-12 rounded-full bg-tertiary shrink-0 mt-0.5"></div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Mostaccioli en Salsa Bolognesa</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-secondary font-label-sm text-label-sm font-data-tabular">Ficha: #SPN-PAS-005</span>
+<span class="text-secondary text-xs">•</span>
+<span class="text-secondary font-body-sm text-body-sm">Pasta Seca Seleccionada</span>
+</div>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-col items-start gap-1">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm uppercase tracking-wide bg-tertiary-fixed/40 text-tertiary font-bold">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                    Pasta
+                  </span>
+<span class="font-body-sm text-body-sm text-secondary">Carga Carbohidratos</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Pan al Ajo</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Queso Parmesano</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<p class="font-body-sm text-body-sm text-secondary line-clamp-2 leading-relaxed">
+                  Pasta corta al dente con salsa de tomate confitado, carne picada y albahaca fresca.
+                </p>
+<div class="flex items-center gap-3 mt-1.5 text-secondary font-label-sm text-label-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 50 min</span>
+<span>•</span>
+<span class="flex items-center gap-1 font-data-tabular"><span class="material-symbols-outlined text-[14px]">scale</span> 300g ración</span>
+</div>
+</td>
+<td class="py-space-md px-space-sm align-top text-center">
+<button aria-checked="true" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-primary transition-colors duration-200 ease-in-out focus:outline-none" role="switch" type="button">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out mt-1 ml-0.5"></span>
+</button>
+<span class="block text-[10px] font-bold text-primary uppercase tracking-wider mt-0.5">Activo</span>
+</td>
+<td class="py-space-md px-space-lg align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Editar Ficha" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Ver Ficha Técnica PDF" type="button">
+<span class="material-symbols-outlined text-[18px]">description</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-error hover:bg-error-container/40 transition-colors" title="Desactivar / Eliminar" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 6 -->
+<tr class="hover:bg-surface-container-low/60 transition-colors group">
+<td class="py-space-md px-space-lg align-top">
+<div class="flex items-start gap-3">
+<div class="w-1.5 h-12 rounded-full bg-error-container shrink-0 mt-0.5"></div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">Costillar de Cerdo BBQ Ahumado</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="text-secondary font-label-sm text-label-sm font-data-tabular">Ficha: #SPN-CER-007</span>
+<span class="text-secondary text-xs">•</span>
+<span class="text-secondary font-body-sm text-body-sm">Horno Convector</span>
+</div>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-col items-start gap-1">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-label-sm font-label-sm uppercase tracking-wide bg-error-container/50 text-on-error-container font-bold">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+                    Cerdo
+                  </span>
+<span class="font-body-sm text-body-sm text-secondary">Asado Lento</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Choclo a la Crema</span>
+<span class="px-2 py-1 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Papas Duquesa</span>
+</div>
+</td>
+<td class="py-space-md px-space-md align-top">
+<p class="font-body-sm text-body-sm text-secondary line-clamp-2 leading-relaxed">
+                  Costillar marinado en salsa barbacoa ahumada, cocción de 3 horas en horno convector.
+                </p>
+<div class="flex items-center gap-3 mt-1.5 text-secondary font-label-sm text-label-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">timer</span> 180 min</span>
+<span>•</span>
+<span class="flex items-center gap-1 font-data-tabular"><span class="material-symbols-outlined text-[14px]">scale</span> 260g ración</span>
+</div>
+</td>
+<td class="py-space-md px-space-sm align-top text-center">
+<button aria-checked="true" class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-primary transition-colors duration-200 ease-in-out focus:outline-none" role="switch" type="button">
+<span class="translate-x-6 inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out mt-1 ml-0.5"></span>
+</button>
+<span class="block text-[10px] font-bold text-primary uppercase tracking-wider mt-0.5">Activo</span>
+</td>
+<td class="py-space-md px-space-lg align-top text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Editar Ficha" type="button">
+<span class="material-symbols-outlined text-[18px]">edit</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-primary hover:bg-surface-container transition-colors" title="Ver Ficha Técnica PDF" type="button">
+<span class="material-symbols-outlined text-[18px]">description</span>
+</button>
+<button class="p-1.5 rounded-lg text-secondary hover:text-error hover:bg-error-container/40 transition-colors" title="Desactivar / Eliminar" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination & Table Operations Footer -->
+<div class="p-space-md bg-surface-container-low flex flex-col md:flex-row items-center justify-between gap-space-md">
+<!-- Records counter -->
+<div class="flex items-center gap-2 text-secondary font-body-sm text-body-sm">
+<span>Mostrando</span>
+<span class="font-data-tabular font-bold text-on-surface">1 a 6</span>
+<span>de</span>
+<span class="font-data-tabular font-bold text-on-surface">21</span>
+<span>platos homologados</span>
+</div>
+<!-- Pagination Controls -->
+<div class="flex items-center gap-1.5">
+<button class="p-1.5 rounded-lg bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container transition-colors disabled:opacity-40" disabled="" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded-lg bg-primary text-on-primary font-headline-sm text-headline-sm flex items-center justify-center shadow-xs" type="button">
+            1
+          </button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container font-label-md text-label-md flex items-center justify-center transition-colors" type="button">
+            2
+          </button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container font-label-md text-label-md flex items-center justify-center transition-colors" type="button">
+            3
+          </button>
+<button class="w-8 h-8 rounded-lg bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container font-label-md text-label-md flex items-center justify-center transition-colors" type="button">
+            4
+          </button>
+<button class="p-1.5 rounded-lg bg-surface-container-lowest text-secondary hover:text-on-surface hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+<!-- Export Utilities -->
+<div class="flex items-center gap-space-xs">
+<button class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md hover:bg-surface-container shadow-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary">table_view</span>
+<span>Exportar Excel</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded bg-surface-container-lowest text-on-surface-variant font-label-md text-label-md hover:bg-surface-container shadow-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary">print</span>
+<span>Imprimir Recetario</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Operational Quality & Nutrition Guideline Banner -->
+<div class="px-margin-desktop pb-space-xl">
+<div class="p-space-lg rounded-xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-low flex flex-col lg:flex-row items-center justify-between gap-space-lg shadow-sm">
+<div class="flex items-start gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-primary text-on-primary flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[26px]">health_and_safety</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-md text-headline-md text-on-surface">Validación Bromatológica &amp; Estándar de Faena Minera</h2>
+<p class="font-body-md text-body-md text-secondary mt-0.5">
+            Todas las recetas del catálogo consideran un mínimo de 3.200 kcal/día distribuido en 4 servicios obligatorios según norma técnica de faenas de altura geográfica.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<a class="inline-flex items-center gap-1.5 px-space-md py-2 rounded bg-surface-container-lowest text-primary font-label-md text-label-md hover:bg-surface shadow-xs transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Manual de Inocuidad</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple interactive filter toggle micro-interactions
+  document.addEventListener('DOMContentLoaded', () => {
+    const filterButtons = document.querySelectorAll('.protein-filter-btn');
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => {
+          b.classList.remove('bg-primary', 'text-on-primary', 'shadow-xs');
+          b.classList.add('bg-surface-container-low', 'text-on-surface-variant');
+        });
+        btn.classList.add('bg-primary', 'text-on-primary', 'shadow-xs');
+        btn.classList.remove('bg-surface-container-low', 'text-on-surface-variant');
+      });
+    });
+
+    // Toggle switch interaction
+    const toggleButtons = document.querySelectorAll('[role="switch"]');
+    toggleButtons.forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const isChecked = toggle.getAttribute('aria-checked') === 'true';
+        toggle.setAttribute('aria-checked', (!isChecked).toString());
+        const knob = toggle.querySelector('span');
+        const statusLabel = toggle.nextElementSibling;
+        
+        if (isChecked) {
+          toggle.classList.remove('bg-primary');
+          toggle.classList.add('bg-secondary');
+          knob.classList.remove('translate-x-6');
+          knob.classList.add('translate-x-1');
+          if (statusLabel) {
+            statusLabel.textContent = 'Inactivo';
+            statusLabel.classList.remove('text-primary');
+            statusLabel.classList.add('text-secondary');
+          }
+        } else {
+          toggle.classList.add('bg-primary');
+          toggle.classList.remove('bg-secondary');
+          knob.classList.add('translate-x-6');
+          knob.classList.remove('translate-x-1');
+          if (statusLabel) {
+            statusLabel.textContent = 'Activo';
+            statusLabel.classList.add('text-primary');
+            statusLabel.classList.remove('text-secondary');
+          }
+        }
+      });
+    });
+  });
+</script></main><footer class="w-full bg-surface-container-low shadow-[0_1px_8px_rgba(15,23,42,0.03)] py-space-lg"><div class="w-full px-margin-desktop flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-md"><span class="font-headline-sm text-headline-sm text-on-surface">Minuta Web</span><span class="font-body-sm text-body-sm text-secondary">• Sistema Operativo de Servicios Gastronómicos y Minería</span></div><div class="flex items-center gap-space-lg text-secondary font-label-md text-label-md"><span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-primary"></span> Sincronizado en línea</span><span>Cumplimiento Sanitario Seremi v4.8</span><span>© 2025 Minuta Web Industrial.</span></div></div></footer></body></html>

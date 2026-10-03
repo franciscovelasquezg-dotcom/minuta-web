@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { api, HistorialEntry, Turno } from '@/lib/api'
+import AppHeader from '@/components/AppHeader'
+import { formatFecha } from '@/lib/fecha'
 
 export default function HistorialPage() {
   const [turnos, setTurnos] = useState<Turno[]>([])
@@ -11,9 +13,7 @@ export default function HistorialPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    api.getCatalogos()
-      .then(c => setTurnos(c.turnos))
-      .catch(() => {})
+    api.getCatalogos().then(c => setTurnos(c.turnos)).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -27,80 +27,121 @@ export default function HistorialPage() {
   }, [turnoSel])
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-gray-900 text-white px-6 py-4">
-        <div className="max-w-screen-xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">Historial de Versiones</h1>
-            <p className="text-gray-400 text-sm">Últimas 20 versiones guardadas por turno</p>
+    <div className="min-h-screen" style={{ background: '#0B1326', color: '#F1F5F9', fontFamily: 'Manrope, sans-serif' }}>
+      <AppHeader activePage="historial" />
+
+      {/* Page title bar */}
+      <div className="pt-16" style={{ borderBottom: '1px solid #1E293B', background: '#0F172A' }}>
+        <div className="max-w-screen-xl mx-auto px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined" style={{ color: '#10B981', fontSize: 22 }}>history</span>
+            <div>
+              <h1 className="font-bold text-white" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 20 }}>
+                Historial de Versiones
+              </h1>
+              <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>Últimas 20 versiones guardadas por turno</p>
+            </div>
           </div>
-          <a href="/" className="text-gray-400 hover:text-white text-sm">← Volver</a>
+          {/* Turno selector */}
+          <div className="flex items-center gap-2 p-1 rounded-lg" style={{ background: '#1E293B', border: '1px solid #334155' }}>
+            {turnos.length > 0 ? turnos.map(t => (
+              <button key={t.codigo} onClick={() => setTurnoSel(t.codigo)}
+                className="px-3 py-1.5 rounded-lg text-sm font-bold transition-all"
+                style={turnoSel === t.codigo
+                  ? { background: '#10B981', color: '#0B1326' }
+                  : { color: '#94A3B8' }}>
+                {t.codigo}
+              </button>
+            )) : (
+              <select value={turnoSel} onChange={e => setTurnoSel(e.target.value)}
+                className="px-3 py-1.5 rounded-lg text-sm outline-none"
+                style={{ background: 'transparent', color: '#F1F5F9', border: 'none' }}>
+                {['14x14','7x7','4x3'].map(c => <option key={c} value={c} style={{ background: '#1E293B' }}>{c}</option>)}
+              </select>
+            )}
+          </div>
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-screen-xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 flex items-center gap-4">
-          <label className="text-sm font-semibold text-gray-600">Turno:</label>
-          <select
-            value={turnoSel}
-            onChange={e => setTurnoSel(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            {turnos.map(t => (
-              <option key={t.codigo} value={t.codigo}>{t.codigo} — {t.diasEnFaena} días</option>
-            ))}
-          </select>
-        </div>
-
-        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
+      <main className="max-w-screen-xl mx-auto px-8 py-6">
+        {error && (
+          <div className="mb-4 p-3 rounded-xl text-sm" style={{ background: '#450A0A', border: '1px solid #991B1B', color: '#FCA5A5' }}>{error}</div>
+        )}
 
         {cargando ? (
-          <div className="text-center py-20 text-gray-400">Cargando historial...</div>
+          <div className="flex items-center justify-center py-32 gap-3" style={{ color: '#64748B' }}>
+            <div className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#10B981', borderTopColor: 'transparent' }} />
+            Cargando historial...
+          </div>
         ) : historial.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
-            <div className="text-4xl mb-3">📋</div>
-            <p className="text-gray-500">Sin historial aún para el turno <strong>{turnoSel}</strong></p>
-            <p className="text-gray-400 text-sm mt-1">Cada vez que guardes una minuta, aparecerá aquí.</p>
+          <div className="flex flex-col items-center justify-center rounded-xl py-24"
+            style={{ border: '2px dashed #1E293B', background: '#0A0E1A' }}>
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
+              style={{ background: '#0F172A', border: '1px solid #1E293B' }}>
+              <span className="material-symbols-outlined text-white" style={{ fontSize: 28 }}>history</span>
+            </div>
+            <p className="font-bold text-white mb-1" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 16 }}>
+              Sin historial para {turnoSel}
+            </p>
+            <p className="text-sm" style={{ color: '#64748B' }}>Cada vez que guardes una minuta, aparecerá aquí.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {historial.map((h, i) => {
               const total = h.totalDias * 2
               const pct = total > 0 ? Math.round((h.confirmados / total) * 100) : 0
+              const isActual = i === 0
+
               return (
-                <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center justify-between flex-wrap gap-3">
+                <div key={i}
+                  className="rounded-xl flex items-center justify-between flex-wrap gap-4 px-5 py-4 transition-all"
+                  style={{
+                    background: '#0F172A',
+                    border: `1px solid ${isActual ? 'rgba(16,185,129,0.4)' : '#1E293B'}`,
+                    borderLeft: `3px solid ${isActual ? '#10B981' : '#334155'}`,
+                  }}>
                   <div className="flex items-center gap-4">
-                    <div className={`w-2 h-10 rounded-full ${i === 0 ? 'bg-green-500' : 'bg-gray-200'}`} />
-                    <div>
+                    <div className="flex flex-col">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-gray-800">{h.timestamp}</span>
-                        {i === 0 && (
-                          <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                        <span className="font-semibold text-white text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                          {h.timestamp}
+                        </span>
+                        {isActual && (
+                          <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded"
+                            style={{ background: '#082F1E', border: '1px solid rgba(16,185,129,0.4)', color: '#34D399' }}>
                             ACTUAL
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500">
-                        {h.casino} · Inicio: {h.fechaInicio} · {h.totalDias} días
+                      <p className="text-xs mt-0.5" style={{ color: '#64748B' }}>
+                        {h.casino} · Inicio: {formatFecha(h.fechaInicio, 'dd-mm-yyyy')} · {h.totalDias} días
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
+
+                  <div className="flex items-center gap-6">
                     <div className="text-center">
-                      <div className="text-lg font-bold text-green-600">{h.confirmados}</div>
-                      <div className="text-[10px] text-gray-400 uppercase">Confirmados</div>
+                      <div className="font-bold text-lg" style={{ color: '#10B981', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                        {h.confirmados}
+                      </div>
+                      <div className="text-[10px] font-bold uppercase tracking-wide" style={{ color: '#475569' }}>Confirmados</div>
                     </div>
-                    <div className="w-24">
-                      <div className="flex justify-between text-[10px] text-gray-400 mb-0.5">
-                        <span>{pct}%</span>
-                        <span>{total} total</span>
+
+                    <div className="w-28">
+                      <div className="flex justify-between mb-1" style={{ fontSize: 10, color: '#64748B' }}>
+                        <span className="font-bold" style={{ color: '#10B981' }}>{pct}%</span>
+                        <span>{total} svc</span>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-1.5">
-                        <div
-                          className="h-1.5 rounded-full bg-green-500 transition-all"
-                          style={{ width: `${pct}%` }}
-                        />
+                      <div className="w-full h-1.5 rounded-full" style={{ background: '#1E293B' }}>
+                        <div className="h-1.5 rounded-full transition-all"
+                          style={{ width: `${pct}%`, background: pct >= 80 ? '#10B981' : pct >= 50 ? '#F59E0B' : '#EF4444' }} />
                       </div>
+                    </div>
+
+                    <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                      style={{ background: '#1E293B', border: '1px solid #334155' }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 14, color: '#64748B' }}>schedule</span>
+                      <span className="text-xs" style={{ color: '#94A3B8' }}>Turno {turnoSel}</span>
                     </div>
                   </div>
                 </div>

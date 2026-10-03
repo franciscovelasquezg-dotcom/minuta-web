@@ -37,10 +37,10 @@ function doGet(e) {
   try {
     const tipo = e.parameter.tipo || '';
     switch (tipo) {
-      case 'platos':          return jsonOk(getPlatos());
-      case 'ensaladas':       return jsonOk(getEnsaladas());
-      case 'acompañamientos': return jsonOk(getAcompañamientos());
-      case 'turnos':          return jsonOk(getTurnos());
+      case 'platos':          { const ss = SpreadsheetApp.openById(SPREADSHEET_ID); return jsonOk(getPlatos(ss)); }
+      case 'ensaladas':       { const ss = SpreadsheetApp.openById(SPREADSHEET_ID); return jsonOk(getEnsaladas(ss)); }
+      case 'acompañamientos': { const ss = SpreadsheetApp.openById(SPREADSHEET_ID); return jsonOk(getAcompañamientos(ss)); }
+      case 'turnos':          { const ss = SpreadsheetApp.openById(SPREADSHEET_ID); return jsonOk(getTurnos(ss)); }
       case 'minuta':          return jsonOk(getMinuta(e.parameter.turno));
       case 'catalogos':       return jsonOk(getCatalogosCompletos());
       case 'historial':       return jsonOk(getHistorial(e.parameter.turno));
@@ -74,8 +74,7 @@ function doPost(e) {
 
 // ── GET: Catálogos ─────────────────────────────────────────────
 
-function getPlatos() {
-  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+function getPlatos(ss) {
   const hoja = ss.getSheetByName(HOJA_PLATOS);
   if (!hoja) return [];
   const rows = hoja.getDataRange().getValues();
@@ -84,15 +83,14 @@ function getPlatos() {
     .map(r => ({
       id:           r[0],
       nombre:       r[1],
-      tipo:         r[2],   // vacuno / cerdo / pollo / pasta / legumbre / otro
+      tipo:         r[2],
       acompañamientosRecomendados: r[3] ? String(r[3]).split(',').map(s => s.trim()) : [],
       receta:       r[4] || '',
       activo:       r[5] !== false && r[5] !== 'false' && r[5] !== 0,
     }));
 }
 
-function getEnsaladas() {
-  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+function getEnsaladas(ss) {
   const hoja = ss.getSheetByName(HOJA_ENSALADAS);
   if (!hoja) return [];
   const rows = hoja.getDataRange().getValues();
@@ -101,13 +99,12 @@ function getEnsaladas() {
     .map(r => ({
       id:     r[0],
       nombre: r[1],
-      tipo:   r[2],   // hojas / raíz / fresca / cocida / típica
+      tipo:   r[2],
       activo: r[3] !== false && r[3] !== 'false' && r[3] !== 0,
     }));
 }
 
-function getAcompañamientos() {
-  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+function getAcompañamientos(ss) {
   const hoja = ss.getSheetByName(HOJA_ACOMPAÑAMIENTOS);
   if (!hoja) return [];
   const rows = hoja.getDataRange().getValues();
@@ -116,13 +113,12 @@ function getAcompañamientos() {
     .map(r => ({
       id:     r[0],
       nombre: r[1],
-      tipo:   r[2],   // arroz / puré / pasta / papas / legumbre / otro
+      tipo:   r[2],
       activo: r[3] !== false && r[3] !== 'false' && r[3] !== 0,
     }));
 }
 
-function getTurnos() {
-  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+function getTurnos(ss) {
   const hoja = ss.getSheetByName(HOJA_TURNOS);
   if (!hoja) return getTurnosDefault();
   const rows = hoja.getDataRange().getValues();
@@ -130,11 +126,11 @@ function getTurnos() {
   return rows.slice(1)
     .filter(r => r[0])
     .map(r => ({
-      codigo:         r[0],   // 7x7, 10x10, 14x14, 20x10
-      nombre:         r[1],   // "7 días en faena / 7 días descanso"
-      diasEnFaena:    Number(r[2]),
-      diasDescanso:   Number(r[3]),
-      activo:         r[4] !== false,
+      codigo:       r[0],
+      nombre:       r[1],
+      diasEnFaena:  Number(r[2]),
+      diasDescanso: Number(r[3]),
+      activo:       r[4] !== false,
     }));
 }
 
@@ -149,18 +145,35 @@ function getTurnosDefault() {
 }
 
 function getCatalogosCompletos() {
-  return {
-    platos:          getPlatos(),
-    ensaladas:       getEnsaladas(),
-    acompañamientos: getAcompañamientos(),
-    turnos:          getTurnos(),
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('catalogos');
+  if (cached) return JSON.parse(cached);
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = {
+    platos:          getPlatos(ss),
+    ensaladas:       getEnsaladas(ss),
+    acompañamientos: getAcompañamientos(ss),
+    turnos:          getTurnos(ss),
   };
+  cache.put('catalogos', JSON.stringify(data), 1800);
+  return data;
+}
+
+function _invalidarCacheCatalogos() {
+  CacheService.getScriptCache().remove('catalogos');
 }
 
 // ── GET: Minuta de un turno ────────────────────────────────────
 
 function getMinuta(turno) {
   if (!turno) throw new Error('Falta parámetro turno');
+
+  const cache    = CacheService.getScriptCache();
+  const cacheKey = 'minuta_' + turno;
+  const cached   = cache.get(cacheKey);
+  if (cached) return JSON.parse(cached);
+
   const ss        = SpreadsheetApp.openById(SPREADSHEET_ID);
   const nombreHoja = HOJA_PREFIX_MINUTA + turno;  // ej: Minuta_10x10
   const hoja      = ss.getSheetByName(nombreHoja);
@@ -199,13 +212,20 @@ function getMinuta(turno) {
     }
   }
 
-  return {
+  const resultado = {
     turno,
     casino:              meta[3] || '',
     fechaInicio:         meta[1] || '',
     diasMinimosRepeticion: Number(meta[2]) || 3,
     dias,
   };
+
+  cache.put(cacheKey, JSON.stringify(resultado), 300);
+  return resultado;
+}
+
+function _invalidarCacheMinuta(turno) {
+  CacheService.getScriptCache().remove('minuta_' + turno);
 }
 
 // ── POST: Guardar minuta completa ──────────────────────────────
@@ -253,6 +273,7 @@ function guardarMinuta(body) {
     Logger.log('Email error: ' + e.message);
   }
 
+  _invalidarCacheMinuta(turno);
   return { ok: true, hoja: nombreHoja, filas: (dias || []).length };
 }
 
@@ -363,6 +384,7 @@ function guardarPlato(body) {
   } else {
     hoja.appendRow(fila);
   }
+  _invalidarCacheCatalogos();
   return { ok: true };
 }
 
@@ -373,6 +395,7 @@ function eliminarPlato(body) {
   const rows  = hoja.getDataRange().getValues();
   const index = rows.findIndex(r => r[0] === body.id);
   if (index > 0) hoja.deleteRow(index + 1);
+  _invalidarCacheCatalogos();
   return { ok: true };
 }
 
@@ -394,6 +417,7 @@ function guardarEnsalada(body) {
   } else {
     hoja.appendRow(fila);
   }
+  _invalidarCacheCatalogos();
   return { ok: true };
 }
 
@@ -415,6 +439,7 @@ function guardarAcompañamiento(body) {
   } else {
     hoja.appendRow(fila);
   }
+  _invalidarCacheCatalogos();
   return { ok: true };
 }
 
@@ -422,7 +447,8 @@ function guardarAcompañamiento(body) {
 
 function nuevoCiclo(body) {
   const { turno, fechaInicio, casino, diasMinimosRepeticion } = body;
-  const turnoInfo = getTurnos().find(t => t.codigo === turno);
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const turnoInfo = getTurnos(ss).find(t => t.codigo === turno);
   if (!turnoInfo) throw new Error('Turno no encontrado: ' + turno);
 
   const diasEnFaena = turnoInfo.diasEnFaena;
@@ -441,8 +467,8 @@ function nuevoCiclo(body) {
       fecha:     dd + '/' + mm,
       diaSemana: DIAS_SEMANA[d.getDay()],
       servicios: [
-        { tipo: 'Almuerzo', ensalada: 'Por Definir', acompañamiento: 'Por Definir', platoPrincipal: 'Por Definir', estado: 'Por Confirmar' },
-        { tipo: 'Cena',     ensalada: 'Por Definir', acompañamiento: 'Por Definir', platoPrincipal: 'Por Definir', estado: 'Por Confirmar' },
+        { tipo: 'Almuerzo', ensalada: 'Por Definir', acompañamiento: 'Por Definir', platoPrincipal: 'Por Definir', postre: '', opcionHipo: '', estado: 'Por Confirmar' },
+        { tipo: 'Cena',     ensalada: 'Por Definir', acompañamiento: 'Por Definir', platoPrincipal: 'Por Definir', postre: '', opcionHipo: '', estado: 'Por Confirmar' },
       ],
     });
   }

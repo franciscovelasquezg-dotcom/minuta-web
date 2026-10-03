@@ -12,12 +12,11 @@ interface ItemFreq {
   total: number
   almuerzo: number
   cena: number
-  posiciones: number[] // índices de día donde aparece
+  posiciones: number[]
 }
 
 function contarFrecuencias(dias: DiaMinuta[], campo: 'platoPrincipal' | 'ensalada' | 'acompañamiento'): ItemFreq[] {
   const mapa = new Map<string, ItemFreq>()
-
   dias.forEach((dia, di) => {
     dia.servicios.forEach(svc => {
       const val = svc[campo]
@@ -25,90 +24,93 @@ function contarFrecuencias(dias: DiaMinuta[], campo: 'platoPrincipal' | 'ensalad
       if (!mapa.has(val)) mapa.set(val, { nombre: val, total: 0, almuerzo: 0, cena: 0, posiciones: [] })
       const item = mapa.get(val)!
       item.total++
-      if (svc.tipo === 'Almuerzo') item.almuerzo++
-      else item.cena++
+      if (svc.tipo === 'Almuerzo') item.almuerzo++; else item.cena++
       item.posiciones.push(di + 1)
     })
   })
-
   return Array.from(mapa.values()).sort((a, b) => b.total - a.total)
 }
 
-function calcularGapMinimo(posiciones: number[]): number {
-  if (posiciones.length < 2) return Infinity
+function calcularGapMinimo(pos: number[]): number {
+  if (pos.length < 2) return Infinity
   let min = Infinity
-  for (let i = 1; i < posiciones.length; i++) {
-    min = Math.min(min, posiciones[i] - posiciones[i - 1])
-  }
+  for (let i = 1; i < pos.length; i++) min = Math.min(min, pos[i] - pos[i - 1])
   return min
 }
 
 function clasificarProteina(nombre: string): string {
   const n = nombre.toLowerCase()
-  if (n.includes('vacuno') || n.includes('carne') || n.includes('asado') || n.includes('chopsui de v') || n.includes('estofado') || n.includes('mechada') || n.includes('albóndiga') || n.includes('tortica')) return 'vacuno'
-  if (n.includes('cerdo') || n.includes('chuleta') || n.includes('medalla')) return 'cerdo'
-  if (n.includes('pollo')) return 'pollo'
-  if (n.includes('spaghetti') || n.includes('mostaccioli') || n.includes('espirales') || n.includes('pasta')) return 'pasta'
-  if (n.includes('lentejas') || n.includes('legumbre')) return 'legumbre'
+  if (['vacuno','carne','asado','estofado','mechada','albóndiga','tortica','chopsui de v'].some(k => n.includes(k))) return 'vacuno'
+  if (['cerdo','chuleta','medalla'].some(k => n.includes(k))) return 'cerdo'
+  if (['pollo'].some(k => n.includes(k))) return 'pollo'
+  if (['spaghetti','mostaccioli','espirales','pasta'].some(k => n.includes(k))) return 'pasta'
+  if (['lentejas','legumbre'].some(k => n.includes(k))) return 'legumbre'
   return 'otro'
 }
 
-const TIPO_COLOR: Record<string, string> = {
-  vacuno:   'bg-red-100 text-red-800 border-red-200',
-  cerdo:    'bg-pink-100 text-pink-800 border-pink-200',
-  pollo:    'bg-yellow-100 text-yellow-800 border-yellow-200',
-  pasta:    'bg-orange-100 text-orange-800 border-orange-200',
-  legumbre: 'bg-green-100 text-green-800 border-green-200',
-  otro:     'bg-gray-100 text-gray-700 border-gray-200',
+const PROT_BADGE: Record<string, string> = {
+  vacuno:   'bg-red-950/80 border-red-800/60 text-red-400',
+  cerdo:    'bg-rose-950/80 border-rose-800/60 text-rose-300',
+  pollo:    'bg-amber-950/80 border-amber-800/60 text-amber-400',
+  pasta:    'bg-orange-950/80 border-orange-800/60 text-orange-400',
+  legumbre: 'bg-emerald-950/80 border-emerald-800/60 text-emerald-400',
+  otro:     'bg-slate-800/80 border-slate-600/60 text-slate-400',
 }
 
-function BarraFreq({ valor, max, color }: { valor: number; max: number; color: string }) {
-  const pct = max > 0 ? (valor / max) * 100 : 0
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 bg-gray-100 rounded-full h-2">
-        <div className={`h-2 rounded-full ${color}`} style={{ width: `${pct}%` }} />
-      </div>
-      <span className="text-xs font-bold w-5 text-right">{valor}</span>
-    </div>
-  )
+const PROT_BAR: Record<string, string> = {
+  vacuno: '#EF4444', cerdo: '#FB7185', pollo: '#F59E0B',
+  pasta: '#F97316', legumbre: '#10B981', otro: '#64748B',
 }
 
 function TablaFrecuencia({ items, diasMinimos, tipo }: { items: ItemFreq[]; diasMinimos: number; tipo: 'plato' | 'ensalada' | 'acomp' }) {
   const maxTotal = items[0]?.total || 1
-  const totalServicios = items.reduce((acc, i) => acc + i.total, 0)
+  const totalSvcs = items.reduce((acc, i) => acc + i.total, 0)
 
   return (
     <div className="space-y-1.5">
       {items.map(item => {
-        const gap = calcularGapMinimo(item.posiciones)
-        const alerta = tipo === 'plato' && item.total > 1 && gap < diasMinimos
+        const gap     = calcularGapMinimo(item.posiciones)
+        const alerta  = tipo === 'plato' && item.total > 1 && gap < diasMinimos
         const cercano = tipo === 'plato' && item.total > 1 && gap >= diasMinimos && gap < diasMinimos + 2
-        const tipo_proteina = tipo === 'plato' ? clasificarProteina(item.nombre) : null
-        const pct = Math.round((item.total / totalServicios) * 100)
+        const prot    = tipo === 'plato' ? clasificarProteina(item.nombre) : null
+        const pct     = Math.round((item.total / totalSvcs) * 100)
+        const barPct  = maxTotal > 0 ? (item.total / maxTotal) * 100 : 0
+        const barColor = alerta ? '#EF4444' : cercano ? '#F59E0B' : '#10B981'
 
         return (
-          <div key={item.nombre} className={`p-2 rounded border ${alerta ? 'border-red-300 bg-red-50' : cercano ? 'border-orange-200 bg-orange-50' : 'border-gray-200 bg-white'}`}>
-            <div className="flex items-start justify-between gap-2 mb-1">
+          <div key={item.nombre}
+            className="p-3 rounded-xl"
+            style={{
+              background: alerta ? '#1C0808' : cercano ? '#1C1007' : '#0F172A',
+              border: `1px solid ${alerta ? '#991B1B60' : cercano ? '#D9770660' : '#1E293B'}`,
+            }}>
+            <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-xs font-medium text-gray-800 leading-tight">{item.nombre}</span>
-                {tipo_proteina && (
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${TIPO_COLOR[tipo_proteina]}`}>
-                    {tipo_proteina}
+                <span className="text-xs font-medium" style={{ color: '#E2E8F0' }}>{item.nombre}</span>
+                {prot && (
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded border font-bold uppercase ${PROT_BADGE[prot]}`}>
+                    {prot}
                   </span>
                 )}
-                {alerta && <span className="text-[10px] text-red-600 font-bold">⚠ Gap {gap}d</span>}
-                {cercano && <span className="text-[10px] text-orange-500">↻ Gap {gap}d</span>}
+                {alerta  && <span className="text-[9px] font-bold" style={{ color: '#F87171' }}>⚠ Gap {gap}d</span>}
+                {cercano && <span className="text-[9px] font-medium" style={{ color: '#FBBF24' }}>↻ Gap {gap}d</span>}
               </div>
-              <div className="text-right shrink-0">
-                <span className="text-xs text-gray-400">{pct}%</span>
-              </div>
+              <span className="text-[10px] shrink-0 font-bold" style={{ color: '#475569' }}>{pct}%</span>
             </div>
-            <BarraFreq valor={item.total} max={maxTotal} color={alerta ? 'bg-red-400' : cercano ? 'bg-orange-400' : 'bg-blue-400'} />
-            <div className="flex gap-3 mt-1">
-              <span className="text-[10px] text-blue-500">🌞 Almuerzo: {item.almuerzo}</span>
-              <span className="text-[10px] text-indigo-500">🌙 Cena: {item.cena}</span>
-              <span className="text-[10px] text-gray-400">Días: {item.posiciones.join(', ')}</span>
+            {/* Bar */}
+            <div className="w-full h-1.5 rounded-full mb-2" style={{ background: '#1E293B' }}>
+              <div className="h-1.5 rounded-full transition-all" style={{ width: `${barPct}%`, background: barColor }} />
+            </div>
+            <div className="flex gap-3">
+              <span className="text-[10px]" style={{ color: '#94A3B8' }}>
+                <span style={{ color: '#F59E0B' }}>☀</span> {item.almuerzo}
+              </span>
+              <span className="text-[10px]" style={{ color: '#94A3B8' }}>
+                <span style={{ color: '#818CF8' }}>◐</span> {item.cena}
+              </span>
+              <span className="text-[10px]" style={{ color: '#475569' }}>
+                Días: {item.posiciones.join(', ')}
+              </span>
             </div>
           </div>
         )
@@ -118,11 +120,10 @@ function TablaFrecuencia({ items, diasMinimos, tipo }: { items: ItemFreq[]; dias
 }
 
 export default function Analisis({ dias, diasMinimos }: Props) {
-  const platos = contarFrecuencias(dias, 'platoPrincipal')
+  const platos   = contarFrecuencias(dias, 'platoPrincipal')
   const ensaladas = contarFrecuencias(dias, 'ensalada')
-  const acomps = contarFrecuencias(dias, 'acompañamiento')
+  const acomps   = contarFrecuencias(dias, 'acompañamiento')
 
-  // Agrupación por tipo proteína
   const porTipo = platos.reduce<Record<string, number>>((acc, p) => {
     const t = clasificarProteina(p.nombre)
     acc[t] = (acc[t] || 0) + p.total
@@ -134,57 +135,88 @@ export default function Analisis({ dias, diasMinimos }: Props) {
   const pendientes = dias.reduce((acc, d) => acc + d.servicios.filter(s => s.platoPrincipal === 'Por Definir').length, 0)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Alertas rápidas */}
       {(repetidos.length > 0 || pendientes > 0) && (
         <div className="flex gap-3 flex-wrap">
           {repetidos.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-center gap-2">
-              <span className="text-red-600 font-bold text-lg">{repetidos.length}</span>
-              <span className="text-red-700 text-sm">plato{repetidos.length > 1 ? 's' : ''} repetido{repetidos.length > 1 ? 's' : ''} muy cercano{repetidos.length > 1 ? 's' : ''}</span>
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{ background: '#1C0808', border: '1px solid #991B1B60' }}>
+              <span className="font-bold text-lg" style={{ color: '#F87171' }}>{repetidos.length}</span>
+              <span className="text-sm" style={{ color: '#FCA5A5' }}>
+                plato{repetidos.length > 1 ? 's' : ''} repetido{repetidos.length > 1 ? 's' : ''} muy cercano{repetidos.length > 1 ? 's' : ''}
+              </span>
             </div>
           )}
           {pendientes > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 flex items-center gap-2">
-              <span className="text-yellow-600 font-bold text-lg">{pendientes}</span>
-              <span className="text-yellow-700 text-sm">servicio{pendientes > 1 ? 's' : ''} sin definir</span>
+            <div className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{ background: '#1C1007', border: '1px solid #D9770660' }}>
+              <span className="font-bold text-lg" style={{ color: '#FBBF24' }}>{pendientes}</span>
+              <span className="text-sm" style={{ color: '#FDE68A' }}>
+                servicio{pendientes > 1 ? 's' : ''} sin definir
+              </span>
             </div>
           )}
         </div>
       )}
 
-      {/* Distribución por tipo proteína */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <h3 className="text-sm font-bold text-gray-700 mb-3">Distribución por tipo de proteína</h3>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-          {Object.entries(porTipo).sort((a,b) => b[1]-a[1]).map(([tipo, count]) => (
-            <div key={tipo} className={`rounded-lg border p-3 text-center ${TIPO_COLOR[tipo]}`}>
-              <div className="text-xl font-bold">{count}</div>
-              <div className="text-[11px] capitalize">{tipo}</div>
-              <div className="text-[10px] opacity-70">{Math.round(count/totalPlatos*100)}%</div>
+      {/* Distribución proteína */}
+      <div className="rounded-xl p-4" style={{ background: '#0F172A', border: '1px solid #1E293B' }}>
+        <h3 className="font-bold text-white text-sm mb-3" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+          Distribución por Tipo de Proteína
+        </h3>
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {Object.entries(porTipo).sort((a, b) => b[1] - a[1]).map(([tipo, count]) => (
+            <div key={tipo} className="rounded-xl p-3 text-center"
+              style={{ background: '#1E293B', border: `1px solid #334155`, borderTop: `3px solid ${PROT_BAR[tipo] || '#64748B'}` }}>
+              <div className="font-bold text-white text-xl" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{count}</div>
+              <div className="text-[11px] capitalize font-semibold mt-0.5" style={{ color: '#94A3B8' }}>{tipo}</div>
+              <div className="text-[10px] mt-0.5" style={{ color: '#475569' }}>{totalPlatos > 0 ? Math.round(count / totalPlatos * 100) : 0}%</div>
             </div>
+          ))}
+        </div>
+        {/* Barra acumulada */}
+        <div className="mt-3 h-2 rounded-full overflow-hidden flex" style={{ background: '#1E293B' }}>
+          {Object.entries(porTipo).sort((a, b) => b[1] - a[1]).map(([tipo, count]) => (
+            <div key={tipo} style={{
+              width: `${totalPlatos > 0 ? count / totalPlatos * 100 : 0}%`,
+              background: PROT_BAR[tipo] || '#64748B',
+              transition: 'width 0.5s',
+            }} />
           ))}
         </div>
       </div>
 
-      {/* 3 columnas */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* 3 columnas de frecuencias */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div>
-          <h3 className="text-sm font-bold text-gray-700 mb-2">
-            Platos principales <span className="text-gray-400 font-normal">({platos.length} distintos)</span>
-          </h3>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="material-symbols-outlined" style={{ fontSize: 15, color: '#10B981' }}>restaurant</span>
+            <h3 className="font-bold text-white text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              Platos Principales
+              <span className="ml-1 font-normal" style={{ color: '#475569', fontSize: 12 }}>({platos.length})</span>
+            </h3>
+          </div>
           <TablaFrecuencia items={platos} diasMinimos={diasMinimos} tipo="plato" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-gray-700 mb-2">
-            Acompañamientos <span className="text-gray-400 font-normal">({acomps.length} distintos)</span>
-          </h3>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="material-symbols-outlined" style={{ fontSize: 15, color: '#F59E0B' }}>grain</span>
+            <h3 className="font-bold text-white text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              Acompañamientos
+              <span className="ml-1 font-normal" style={{ color: '#475569', fontSize: 12 }}>({acomps.length})</span>
+            </h3>
+          </div>
           <TablaFrecuencia items={acomps} diasMinimos={diasMinimos} tipo="acomp" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-gray-700 mb-2">
-            Ensaladas <span className="text-gray-400 font-normal">({ensaladas.length} distintas)</span>
-          </h3>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="material-symbols-outlined" style={{ fontSize: 15, color: '#34D399' }}>eco</span>
+            <h3 className="font-bold text-white text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+              Ensaladas
+              <span className="ml-1 font-normal" style={{ color: '#475569', fontSize: 12 }}>({ensaladas.length})</span>
+            </h3>
+          </div>
           <TablaFrecuencia items={ensaladas} diasMinimos={diasMinimos} tipo="ensalada" />
         </div>
       </div>

@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "surface-container": "#e5eeff", "inverse-on-surface": "#eaf1ff", "on-primary-fixed": "#002114", "on-secondary": "#ffffff", "surface-bright": "#f8f9ff", "secondary-container": "#dae2fd", "error": "#ba1a1a", "inverse-primary": "#68dba9", "surface-container-lowest": "#ffffff", "on-primary-container": "#f5fff7", "tertiary-fixed": "#ffddb8", "surface-variant": "#d3e4fe", "tertiary-fixed-dim": "#ffb95f", "primary": "#006948", "on-primary": "#ffffff", "primary-fixed-dim": "#68dba9", "on-secondary-fixed": "#131b2e", "tertiary-container": "#a36700", "surface-dim": "#cbdbf5", "on-error-container": "#93000a", "tertiary": "#825100", "surface-container-high": "#dce9ff", "outline-variant": "#bccac0", "secondary-fixed": "#dae2fd", "on-tertiary-fixed-variant": "#653e00", "on-error": "#ffffff", "surface-container-highest": "#d3e4fe", "on-tertiary-fixed": "#2a1700", "on-secondary-container": "#5c647a", "secondary": "#565e74", "on-surface-variant": "#3d4a42", "surface-container-low": "#eff4ff", "surface-tint": "#006c4a", "on-surface": "#0b1c30", "inverse-surface": "#213145", "on-secondary-fixed-variant": "#3f465c", "primary-fixed": "#85f8c4", "secondary-fixed-dim": "#bec6e0", "error-container": "#ffdad6", "on-background": "#0b1c30", "on-tertiary-container": "#fffbff", "on-primary-fixed-variant": "#005137", "on-tertiary": "#ffffff", "outline": "#6d7a72", "background": "#f8f9ff", "primary-container": "#00855d", "surface": "#f8f9ff" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-xs": "0.25rem", "space-lg": "1.25rem", "space-md": "0.75rem", "space-sm": "0.5rem", "space-xl": "2rem", "margin": "1rem", "gutter-desktop": "1.5rem", "margin-desktop": "2rem", "gutter": "1rem" }, "fontFamily": { "headline-lg": [ "Plus Jakarta Sans" ], "headline-sm": [ "Plus Jakarta Sans" ], "body-md": [ "Manrope" ], "label-sm": [ "Manrope" ], "label-md": [ "Manrope" ], "display-lg": [ "Plus Jakarta Sans" ], "body-sm": [ "Manrope" ], "data-tabular": [ "Manrope" ], "headline-lg-mobile": [ "Plus Jakarta Sans" ], "body-lg": [ "Manrope" ], "headline-md": [ "Plus Jakarta Sans" ] }, "fontSize": { "headline-lg": [ "28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "700" } ], "headline-sm": [ "16px", { "lineHeight": "24px", "fontWeight": "600" } ], "body-md": [ "14px", { "lineHeight": "20px", "fontWeight": "400" } ], "label-sm": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" } ], "label-md": [ "13px", { "lineHeight": "18px", "fontWeight": "600" } ], "display-lg": [ "36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" } ], "body-sm": [ "12px", { "lineHeight": "16px", "fontWeight": "400" } ], "data-tabular": [ "13px", { "lineHeight": "18px", "fontWeight": "600" } ], "headline-lg-mobile": [ "22px", { "lineHeight": "28px", "fontWeight": "700" } ], "body-lg": [ "16px", { "lineHeight": "24px", "fontWeight": "400" } ], "headline-md": [ "20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" } ] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 bg-surface-container-lowest shadow-[0_1px_8px_rgba(15,23,42,0.06)]"><div class="h-16 w-full px-margin-desktop flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-md shrink-0"><img alt="Minuta Web Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UErP-3CU3n55PBNt7RaM8V4U1jxcjLzdScMddTqXhLJfCGQx85Bn185QPbxPe6IetlGgRxFI2SSgux4_4jNENuxEwwPV1zNZJQl73mxDbriJbXXyzVthP9rSi_8r3sVzPWcJTh0AWyo3re8UBDoor3uXeTI-T7zmyn2F0w29MoGLLen9QxV9zLuRcBVS45bD_yUO8sGTWblf7Oz59Yo-ni_N1xpO-6rpmQQoHNSbVz2x7ujbBmWvRqG1Bu"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight">Minuta Web</span><span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">Faena</span></div><span class="font-body-sm text-body-sm text-secondary">Casino de Faena</span></div></div><nav class="hidden xl:flex items-center gap-space-xs shrink-0" data-active-classes="bg-surface-container text-primary font-headline-sm rounded-lg"><a aria-current="page" class="px-space-md py-space-sm transition-colors bg-surface-container text-primary font-headline-sm rounded-lg" data-path="planificador" href="#">Planificador</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="generar-ia" href="#">Generar IA</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="catalogos" href="#">Catálogos</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="importar-archivos" href="#">Importar Archivos</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="historial" href="#">Historial</a><a class="px-space-md py-space-sm font-label-md text-label-md text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-path="analisis-nutricional" href="#">Análisis Nutricional</a></nav><div class="flex items-center gap-space-md shrink-0"><div class="relative flex items-center bg-surface-container-low rounded-lg px-space-md py-1.5"><span class="material-symbols-outlined text-secondary text-[18px] mr-1.5">apartment</span><select class="bg-transparent font-label-md text-label-md text-on-surface focus:outline-none cursor-pointer pr-space-xs"><option selected="" value="spence">Casino Central Spence</option><option value="escondida">Casino Escondida Norte</option><option value="caracoles">Campamento Caracoles</option></select></div><button class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">download</span><span>Exportar PDF</span></button><button class="relative p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error ring-2 ring-surface-container-lowest"></span></button><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMSd9yx3DDIrfBhPbwPT0kmMDD9X2gmbLUMpumg9Y5_6dflBdGvLrL5I-NN9Nozo7v9Bh8-lnmNO15dTv93J86fiJwtRyVUnRgIdEUtEiTqNRjmi_vDP0sZ_v1laVUlP3PNUJJ4XO9FHiG7PbFAzt-mCtUsTffDBZ-IJxiegPBmrLgADu1N4AaFkGOm8xSLHmZPDT2c8Rpb2VOaQHlCobn4d8xHwSTzfcgkCF3XqyPIIIjoJV4EHCytQ"/><div class="hidden 2xl:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface leading-tight">Alejandra Morales</span><span class="font-body-sm text-body-sm text-secondary leading-tight">Sup. Casino</span></div></div></div></div></header><main class="w-full pt-16 bg-background"><div class="flex flex-col w-full">
+<!-- Interactive & Notification Script -->
+<script>
+    function dismissAlert() {
+      const banner = document.getElementById('variety-alert-banner');
+      if (banner) {
+        banner.style.transition = 'opacity 0.25s ease-out, transform 0.25s ease-out';
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-8px)';
+        setTimeout(() => banner.remove(), 250);
+      }
+    }
+    function resolveAlert() {
+      const targetCard = document.getElementById('dia3-almuerzo-badge');
+      if (targetCard) {
+        targetCard.classList.remove('bg-surface-container', 'text-tertiary-container');
+        targetCard.classList.add('bg-primary-fixed', 'text-on-primary-fixed');
+        targetCard.innerHTML = '<span class="material-symbols-outlined text-[13px] mr-1">check</span> Resuelto: Pescado Reineta Grillé';
+      }
+      dismissAlert();
+    }
+  </script>
+<!-- Subheader Operational Matrix & Controls -->
+<section class="w-full bg-surface-container-lowest px-margin-desktop py-space-md shadow-sm">
+<div class="flex flex-col 2xl:flex-row items-stretch 2xl:items-center justify-between gap-space-md">
+<!-- Left Controls: Turnos & Datepicker -->
+<div class="flex flex-wrap items-center gap-space-md">
+<!-- Turno Selector -->
+<div class="flex items-center p-1 bg-surface-container-low rounded-lg">
+<button class="flex items-center gap-1.5 px-space-md py-1.5 rounded-lg bg-surface-container-lowest text-primary font-label-md text-label-md shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary">check_circle</span>
+<span>14x14</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary ml-0.5"></span>
+</button>
+<button class="px-space-md py-1.5 rounded-lg text-secondary font-label-md text-label-md hover:text-on-surface hover:bg-surface-container transition-all" type="button">
+            7x7
+          </button>
+<button class="px-space-md py-1.5 rounded-lg text-secondary font-label-md text-label-md hover:text-on-surface hover:bg-surface-container transition-all" type="button">
+            4x3
+          </button>
+<button class="px-space-md py-1.5 rounded-lg text-secondary font-label-md text-label-md hover:text-on-surface hover:bg-surface-container transition-all" type="button">
+            Turno Especial
+          </button>
+</div>
+<!-- Date Range Controller -->
+<div class="flex items-center bg-surface-container-low rounded-lg p-1">
+<button class="w-7 h-7 flex items-center justify-center rounded text-secondary hover:text-on-surface hover:bg-surface-container-lowest transition-colors" title="Semana anterior" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="px-space-sm py-1 font-label-md text-label-md text-secondary hover:text-on-surface hover:bg-surface-container-lowest rounded transition-colors" type="button">
+            Hoy
+          </button>
+<button class="w-7 h-7 flex items-center justify-center rounded text-secondary hover:text-on-surface hover:bg-surface-container-lowest transition-colors" title="Semana siguiente" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+<div class="flex items-center pl-space-sm pr-space-md py-1 gap-space-xs text-on-surface">
+<span class="material-symbols-outlined text-[18px] text-primary">calendar_month</span>
+<span class="font-data-tabular text-data-tabular font-bold tracking-tight">01/10/2026</span>
+<span class="font-body-sm text-body-sm text-secondary ml-1">— Ciclo Activo A</span>
+</div>
+</div>
+<!-- Metric micro-tag -->
+<div class="hidden xl:flex items-center gap-space-xs px-space-md py-1.5 bg-surface-container rounded-lg text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">group</span>
+<span>DOTACIÓN ESTIMADA:</span>
+<span class="font-data-tabular text-data-tabular text-on-surface font-bold">1.480 RACIONES / DÍA</span>
+</div>
+</div>
+<!-- Right Controls: View Switcher & Action CTAs -->
+<div class="flex flex-wrap items-center justify-between 2xl:justify-end gap-space-md">
+<!-- Segmented View Switcher -->
+<div class="flex items-center p-1 bg-surface-container-low rounded-lg">
+<button class="flex items-center gap-1.5 px-space-md py-1.5 rounded-lg bg-inverse-surface text-inverse-on-surface font-label-md text-label-md shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">view_kanban</span>
+<span>Vista Tarjetas</span>
+</button>
+<button class="flex items-center gap-1.5 px-space-md py-1.5 rounded-lg text-secondary font-label-md text-label-md hover:text-on-surface hover:bg-surface-container transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">table_rows</span>
+<span>Vista Semanal</span>
+</button>
+<button class="flex items-center gap-1.5 px-space-md py-1.5 rounded-lg text-secondary font-label-md text-label-md hover:text-on-surface hover:bg-surface-container transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">monitoring</span>
+<span>Análisis Nutricional</span>
+</button>
+</div>
+<!-- Action CTAs -->
+<div class="flex items-center gap-space-sm">
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px] text-secondary">fact_check</span>
+<span>Validar Reglas</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-space-lg py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container shadow-md transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Guardar Cambios</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Workspace Canvas -->
+<div class="w-full px-margin-desktop py-space-lg flex flex-col">
+<!-- Alert Banner: Variety Rule Collision -->
+<section class="w-full mb-space-lg bg-surface-container-high rounded-xl p-space-md shadow-sm transition-all" id="variety-alert-banner">
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex items-start md:items-center gap-space-md">
+<div class="w-9 h-9 rounded-lg bg-tertiary-container text-on-tertiary-container flex items-center justify-center shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[22px]">warning</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-sm text-headline-sm text-on-surface">Alerta de Variedad Detectada</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-tertiary font-label-sm text-label-sm uppercase font-bold">Faena Spence • Almuerzos</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+              Regla de variedad: El plato <strong class="text-on-surface font-semibold">"Carne Mechada"</strong> se repite con solo 2 días de diferencia entre <span class="font-semibold underline decoration-tertiary">Día 3</span> y <span class="font-semibold underline decoration-tertiary">Día 5</span> (Mínimo recomendado por contrato: 3 días consecutivos sin repetición de proteína idéntica).
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm shrink-0 self-end md:self-auto">
+<button class="inline-flex items-center gap-1.5 px-space-md py-1.5 rounded-lg bg-tertiary-container text-on-tertiary-container font-label-md text-label-md hover:opacity-90 shadow-sm transition-all" onclick="resolveAlert()" type="button">
+<span class="material-symbols-outlined text-[16px]">auto_fix_high</span>
+<span>Resolver Automáticamente</span>
+</button>
+<button class="w-8 h-8 rounded-lg text-secondary hover:bg-surface-container hover:text-on-surface flex items-center justify-center transition-colors" onclick="dismissAlert()" title="Descartar notificación" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Operational KPI & Shift Summary Header Strip -->
+<div class="w-full flex items-center justify-between mb-space-md px-1">
+<div class="flex items-center gap-space-md">
+<h2 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Secuencia de Menús Semanal</h2>
+<span class="px-space-sm py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">4 DE 14 DÍAS MOSTRADOS</span>
+</div>
+<div class="hidden lg:flex items-center gap-space-lg">
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-secondary">
+<span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+<span>Confirmado (7)</span>
+</div>
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-secondary">
+<span class="w-2.5 h-2.5 rounded-full bg-surface-variant"></span>
+<span>En Revisión (1)</span>
+</div>
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-secondary">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim"></span>
+<span>Por Confirmar (2)</span>
+</div>
+</div>
+</div>
+<!-- 4-Column Master Daily Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-gutter-desktop items-start">
+<!-- ================= CARD 1: DÍA 1 (Lunes 01/10) ================= -->
+<article class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
+<!-- Daily Card Header -->
+<header class="p-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Día 1 - Lunes 01/10</h3>
+<span class="font-body-sm text-body-sm text-secondary">Rotación Ciclo Semanal</span>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<span class="px-space-sm py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm">2 Servicios</span>
+<div class="flex items-center gap-1 px-space-xs py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Completo</span>
+</div>
+</div>
+</header>
+<div class="p-space-md flex flex-col gap-space-lg">
+<!-- Service 1: Almuerzo -->
+<div class="flex flex-col bg-surface-container-lowest rounded-lg p-space-sm">
+<div class="flex items-center justify-between pb-space-xs mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-tertiary" style="font-variation-settings: 'FILL' 1;">wb_sunny</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Almuerzo</span>
+<span class="font-data-tabular text-body-sm text-secondary">12:00 - 15:30</span>
+</div>
+<span class="px-2 py-0.5 rounded text-on-primary-fixed bg-primary-fixed font-label-sm text-label-sm font-bold uppercase">Confirmado</span>
+</div>
+<!-- Form Items -->
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Plato Principal</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 pl-space-sm pr-20 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Estofado de Vacuno</option>
+<option>Pechuga a la Parrilla</option>
+<option>Merluza al Horno</option>
+</select>
+<span class="absolute right-7 pointer-events-none px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm">Vacuno</span>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Acompañamiento</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Arroz Primavera</option>
+<option>Papas Doradas</option>
+<option>Quinoa Salteada</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Ensalada / Entrada</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Tomate con Palmitos</option>
+<option>Choclo Mayo</option>
+<option>Lechuga Hidropónica</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Postre</label>
+<input class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none" type="text" value="Flan Casero"/>
+</div>
+<!-- Healthy Option Pill -->
+<div class="p-space-xs rounded bg-surface-container-low text-primary font-body-sm text-body-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">eco</span>
+<span class="truncate font-semibold">Saludable: Bowl vacuno + Tomate palmitos</span>
+</div>
+</div>
+</div>
+<!-- Service 2: Cena -->
+<div class="flex flex-col bg-surface-container-lowest rounded-lg p-space-sm">
+<div class="flex items-center justify-between pb-space-xs mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary" style="font-variation-settings: 'FILL' 1;">bedtime</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Cena</span>
+<span class="font-data-tabular text-body-sm text-secondary">19:30 - 22:30</span>
+</div>
+<span class="px-2 py-0.5 rounded text-tertiary bg-surface-container-high font-label-sm text-label-sm font-bold uppercase">Por Confirmar</span>
+</div>
+<!-- Form Items -->
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Plato Principal</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 pl-space-sm pr-16 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Pollo Asado</option>
+<option>Goulash de Pavo</option>
+</select>
+<span class="absolute right-7 pointer-events-none px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm">Pollo</span>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Acompañamiento</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Puré de Papas</option>
+<option>Arroz Graneado</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Ensalada / Entrada</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Lechuga con Espinaca</option>
+<option>Repollo Morado</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Postre</label>
+<input class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none" type="text" value="Fruta de la estación"/>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- ================= CARD 2: DÍA 2 (Martes 02/10) ================= -->
+<article class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
+<!-- Daily Card Header -->
+<header class="p-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Día 2 - Martes 02/10</h3>
+<span class="font-body-sm text-body-sm text-secondary">Rotación Ciclo Semanal</span>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<span class="px-space-sm py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm">2 Servicios</span>
+<div class="flex items-center gap-1 px-space-xs py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+<span>Completo</span>
+</div>
+</div>
+</header>
+<div class="p-space-md flex flex-col gap-space-lg">
+<!-- Service 1: Almuerzo -->
+<div class="flex flex-col bg-surface-container-lowest rounded-lg p-space-sm">
+<div class="flex items-center justify-between pb-space-xs mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-tertiary" style="font-variation-settings: 'FILL' 1;">wb_sunny</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Almuerzo</span>
+<span class="font-data-tabular text-body-sm text-secondary">12:00 - 15:30</span>
+</div>
+<span class="px-2 py-0.5 rounded text-on-primary-fixed bg-primary-fixed font-label-sm text-label-sm font-bold uppercase">Confirmado</span>
+</div>
+<!-- Form Items -->
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Plato Principal</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 pl-space-sm pr-16 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Lomo de Cerdo al Horno</option>
+<option>Pollo Criollo</option>
+</select>
+<span class="absolute right-7 pointer-events-none px-1.5 py-0.5 rounded bg-surface-variant text-on-surface font-label-sm text-label-sm">Cerdo</span>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Acompañamiento</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Papas Rústicas al Romero</option>
+<option>Arroz Integral</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Ensalada / Entrada</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Mixta Campestre</option>
+<option>Pepino Ciboulette</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Postre</label>
+<input class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none" type="text" value="Macedonia de Frutas"/>
+</div>
+<!-- Healthy Option Pill -->
+<div class="p-space-xs rounded bg-surface-container-low text-primary font-body-sm text-body-sm flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-primary">eco</span>
+<span class="truncate font-semibold">Saludable: Bowl lomo cerdo + Mixta Campestre</span>
+</div>
+</div>
+</div>
+<!-- Service 2: Cena -->
+<div class="flex flex-col bg-surface-container-lowest rounded-lg p-space-sm">
+<div class="flex items-center justify-between pb-space-xs mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary" style="font-variation-settings: 'FILL' 1;">bedtime</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Cena</span>
+<span class="font-data-tabular text-body-sm text-secondary">19:30 - 22:30</span>
+</div>
+<span class="px-2 py-0.5 rounded text-on-primary-fixed bg-primary-fixed font-label-sm text-label-sm font-bold uppercase">Confirmado</span>
+</div>
+<!-- Form Items -->
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Plato Principal</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 pl-space-sm pr-24 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Lentejas Españolas con Chorizo</option>
+<option>Sopa Campestre de Aves</option>
+</select>
+<span class="absolute right-7 pointer-events-none px-1.5 py-0.5 rounded bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm">Legumbre</span>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Acompañamiento</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Arroz Blanco Graneado</option>
+<option>Croûtons Dorados</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Ensalada / Entrada</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Zanahoria Rallada con Cilantro</option>
+<option>Betarraga Cocida</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Postre</label>
+<input class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none" type="text" value="Yogurt con Cereales"/>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- ================= CARD 3: DÍA 3 (Miércoles 03/10) - CON ALERTA ================= -->
+<article class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
+<!-- Daily Card Header with Warning Signal -->
+<header class="p-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Día 3 - Miércoles 03/10</h3>
+<span class="material-symbols-outlined text-tertiary text-[18px]" title="Alerta de variedad">error</span>
+</div>
+<span class="font-body-sm text-body-sm text-tertiary font-semibold">Requiere Atención</span>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<span class="px-space-sm py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm">2 Servicios</span>
+</div>
+</header>
+<div class="p-space-md flex flex-col gap-space-lg">
+<!-- Service 1: Almuerzo (Flagged Item) -->
+<div class="flex flex-col bg-surface-container-low rounded-lg p-space-sm">
+<div class="flex items-center justify-between pb-space-xs mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-tertiary" style="font-variation-settings: 'FILL' 1;">wb_sunny</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Almuerzo</span>
+<span class="font-data-tabular text-body-sm text-secondary">12:00 - 15:30</span>
+</div>
+<span class="px-2 py-0.5 rounded text-on-surface bg-surface-variant font-label-sm text-label-sm font-bold uppercase">En Revisión</span>
+</div>
+<!-- Form Items -->
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">
+                  Plato Principal <span class="text-tertiary font-bold">• Conflicto Variedad</span>
+</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 pl-space-sm pr-20 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Carne Mechada en su Salsa</option>
+<option>Reineta Grillé al Limón (Reemplazo Sugerido)</option>
+<option>Goulash Húngaro</option>
+</select>
+<span class="absolute right-7 pointer-events-none px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm">Vacuno</span>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+<!-- Inline rule prompt -->
+<div class="mt-1 px-2 py-1 rounded bg-surface-container text-tertiary-container font-label-sm text-label-sm flex items-center justify-between" id="dia3-almuerzo-badge">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">info</span>
+                    Se repite en Día 5 (intervalo 2d &lt; 3d)
+                  </span>
+<button class="underline font-bold hover:text-on-surface" onclick="resolveAlert()" type="button">Cambiar</button>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Acompañamiento</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Spaghetti al Burro</option>
+<option>Puré Mixto</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Ensalada / Entrada</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Betarraga con Cebolla Morada</option>
+<option>Surtido Verde</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Postre</label>
+<input class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none" type="text" value="Sémola con Leche y Caramelo"/>
+</div>
+</div>
+</div>
+<!-- Service 2: Cena -->
+<div class="flex flex-col bg-surface-container-lowest rounded-lg p-space-sm">
+<div class="flex items-center justify-between pb-space-xs mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary" style="font-variation-settings: 'FILL' 1;">bedtime</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Cena</span>
+<span class="font-data-tabular text-body-sm text-secondary">19:30 - 22:30</span>
+</div>
+<span class="px-2 py-0.5 rounded text-on-primary-fixed bg-primary-fixed font-label-sm text-label-sm font-bold uppercase">Confirmado</span>
+</div>
+<!-- Form Items -->
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Plato Principal</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 pl-space-sm pr-16 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Pechuga Grillé a las Finas Hierbas</option>
+<option>Pescado al Vapor</option>
+</select>
+<span class="absolute right-7 pointer-events-none px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm">Pollo</span>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Acompañamiento</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Verduras Salteadas al Wok</option>
+<option>Papas Cocidas</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Ensalada / Entrada</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Apio con Palta y Nueces</option>
+<option>Tomate Albahaca</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Postre</label>
+<input class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none" type="text" value="Compota de Manzanas"/>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- ================= CARD 4: DÍA 4 (Jueves 04/10) ================= -->
+<article class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
+<!-- Daily Card Header -->
+<header class="p-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Día 4 - Jueves 04/10</h3>
+<span class="font-body-sm text-body-sm text-secondary">Rotación Ciclo Semanal</span>
+</div>
+<div class="flex items-center gap-space-xs shrink-0">
+<span class="px-space-sm py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm">2 Servicios</span>
+<div class="flex items-center gap-1 px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span>Parcial</span>
+</div>
+</div>
+</header>
+<div class="p-space-md flex flex-col gap-space-lg">
+<!-- Service 1: Almuerzo -->
+<div class="flex flex-col bg-surface-container-lowest rounded-lg p-space-sm">
+<div class="flex items-center justify-between pb-space-xs mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-tertiary" style="font-variation-settings: 'FILL' 1;">wb_sunny</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Almuerzo</span>
+<span class="font-data-tabular text-body-sm text-secondary">12:00 - 15:30</span>
+</div>
+<span class="px-2 py-0.5 rounded text-on-primary-fixed bg-primary-fixed font-label-sm text-label-sm font-bold uppercase">Confirmado</span>
+</div>
+<!-- Form Items -->
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Plato Principal</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 pl-space-sm pr-16 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Mostaccioli a la Bolognesa</option>
+<option>Lasaña Vegetariana</option>
+</select>
+<span class="absolute right-7 pointer-events-none px-1.5 py-0.5 rounded bg-tertiary-fixed-dim text-on-tertiary-fixed font-label-sm text-label-sm">Pasta</span>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Acompañamiento</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Pan al Ajo Artesanal</option>
+<option>Queso Parmesano Porcionado</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Ensalada / Entrada</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">César Clásica con Crutones</option>
+<option>Pepino con Eneldo</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Postre</label>
+<input class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none" type="text" value="Mousse de Maracuyá"/>
+</div>
+</div>
+</div>
+<!-- Service 2: Cena -->
+<div class="flex flex-col bg-surface-container-lowest rounded-lg p-space-sm">
+<div class="flex items-center justify-between pb-space-xs mb-space-sm">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-secondary" style="font-variation-settings: 'FILL' 1;">bedtime</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Cena</span>
+<span class="font-data-tabular text-body-sm text-secondary">19:30 - 22:30</span>
+</div>
+<span class="px-2 py-0.5 rounded text-tertiary bg-surface-container-high font-label-sm text-label-sm font-bold uppercase">Por Confirmar</span>
+</div>
+<!-- Form Items -->
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Plato Principal</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 pl-space-sm pr-16 bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Costillar de Cerdo BBQ</option>
+<option>Pavo al Horno</option>
+</select>
+<span class="absolute right-7 pointer-events-none px-1.5 py-0.5 rounded bg-surface-variant text-on-surface font-label-sm text-label-sm">Cerdo</span>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Acompañamiento</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Choclo a la Crema</option>
+<option>Arroz al Cilantro</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Ensalada / Entrada</label>
+<div class="relative flex items-center">
+<select class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none appearance-none cursor-pointer">
+<option selected="">Coleslaw Casero</option>
+<option>Tomate con Orégano</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 pointer-events-none text-secondary text-[18px]">expand_more</span>
+</div>
+</div>
+<div>
+<label class="block font-label-sm text-label-sm text-secondary uppercase mb-1">Postre</label>
+<input class="w-full h-9 px-space-sm bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded shadow-sm focus:outline-none" type="text" value="Fruta Fresca Selección"/>
+</div>
+</div>
+</div>
+</div>
+</article>
+</div>
+<!-- Quick Footer Pagination / Days Nav Rail -->
+<div class="w-full mt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md pt-space-md border-t-0 bg-surface-container-low rounded-xl px-space-lg py-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-md text-label-md text-secondary">Navegar Bloque de Roster:</span>
+<div class="flex items-center gap-1">
+<button class="px-3 py-1 rounded bg-primary text-on-primary font-label-md text-label-md shadow-sm" type="button">Días 1 - 4</button>
+<button class="px-3 py-1 rounded bg-surface-container-lowest text-secondary hover:text-on-surface font-label-md text-label-md" type="button">Días 5 - 8</button>
+<button class="px-3 py-1 rounded bg-surface-container-lowest text-secondary hover:text-on-surface font-label-md text-label-md" type="button">Días 9 - 12</button>
+<button class="px-3 py-1 rounded bg-surface-container-lowest text-secondary hover:text-on-surface font-label-md text-label-md" type="button">Días 13 - 14</button>
+</div>
+</div>
+<div class="flex items-center gap-space-lg font-body-sm text-body-sm text-secondary">
+<span>Última sincronización con Bodega Central: <strong>Hace 6 min</strong></span>
+<span class="flex items-center gap-1 text-primary font-bold">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+          Estándar Minero ISO-22000 Conforme
+        </span>
+</div>
+</div>
+</div>
+</div></main><footer class="w-full bg-surface-container-low shadow-[0_1px_8px_rgba(15,23,42,0.03)] py-space-lg"><div class="w-full px-margin-desktop flex flex-col md:flex-row items-center justify-between gap-space-md"><div class="flex items-center gap-space-md"><span class="font-headline-sm text-headline-sm text-on-surface">Minuta Web</span><span class="font-body-sm text-body-sm text-secondary">• Sistema Operativo de Servicios Gastronómicos y Minería</span></div><div class="flex items-center gap-space-lg text-secondary font-label-md text-label-md"><span class="flex items-center gap-1"><span class="inline-block w-2 h-2 rounded-full bg-primary"></span> Sincronizado en línea</span><span>Cumplimiento Sanitario Seremi v4.8</span><span>© 2025 Minuta Web Industrial.</span></div></div></footer></body></html>
