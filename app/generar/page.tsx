@@ -169,109 +169,97 @@ export default function GenerarPage() {
             <p style={{ color: '#64748B', fontSize: 14 }}>Cargando catálogos desde Sheets...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <div className="space-y-5">
 
-            {/* LEFT — Config panel */}
-            <div className="xl:col-span-4 space-y-4">
-              <div className="rounded-xl p-5 space-y-4" style={{ background: '#0F172A', border: '1px solid #1E293B' }}>
-                <h2 className="font-bold text-white text-sm" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                  Configuración del Ciclo
-                </h2>
-
-                <div>
-                  <label className="block mb-1.5 font-semibold uppercase tracking-wider" style={{ fontSize: 10, color: '#64748B' }}>Casino / Faena</label>
-                  <input value={casino} onChange={e => setCasino(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-colors"
-                    style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }}
-                    onFocus={e => (e.target.style.borderColor = '#10B981')}
-                    onBlur={e => (e.target.style.borderColor = '#334155')} />
-                </div>
-
-                <div>
-                  <label className="block mb-1.5 font-semibold uppercase tracking-wider" style={{ fontSize: 10, color: '#64748B' }}>Tipo de Turno</label>
-                  <select value={turnoSel} onChange={e => setTurnoSel(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }}>
-                    {(catalogos?.turnos || []).map(t => (
-                      <option key={t.codigo} value={t.codigo}>{t.codigo} — {t.diasEnFaena} días en faena</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block mb-1.5 font-semibold uppercase tracking-wider" style={{ fontSize: 10, color: '#64748B' }}>Fecha de Inicio del Ciclo</label>
-                  <input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg text-sm outline-none"
-                    style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }} />
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="font-semibold uppercase tracking-wider" style={{ fontSize: 10, color: '#64748B' }}>Gap Mínimo Repetición</label>
-                    <span className="font-bold text-sm" style={{ color: '#10B981' }}>{gapDias} días</span>
+            {/* Barra horizontal de configuración del ciclo */}
+            <div className="rounded-xl p-4 lg:p-5" style={{ background: '#0F172A', border: '1px solid #1E293B' }}>
+              <div className="flex flex-col xl:flex-row items-stretch xl:items-end justify-between gap-5">
+                <div className="flex flex-wrap items-end gap-4">
+                  <div className="min-w-[180px]">
+                    <label className="block mb-1.5 font-semibold uppercase tracking-wider" style={{ fontSize: 10, color: '#64748B' }}>Casino / Faena</label>
+                    <input value={casino} onChange={e => setCasino(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-colors"
+                      style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }}
+                      onFocus={e => (e.target.style.borderColor = '#10B981')}
+                      onBlur={e => (e.target.style.borderColor = '#334155')} />
                   </div>
-                  <input type="range" min={1} max={7} value={gapDias} onChange={e => setGapDias(Number(e.target.value))}
-                    className="w-full accent-emerald-500" style={{ accentColor: '#10B981' }} />
-                  <div className="flex justify-between mt-1" style={{ fontSize: 10, color: '#475569' }}>
-                    <span>1 día</span><span>7 días</span>
+
+                  <div className="min-w-[200px]">
+                    <label className="block mb-1.5 font-semibold uppercase tracking-wider" style={{ fontSize: 10, color: '#64748B' }}>Tipo de Turno</label>
+                    <select value={turnoSel} onChange={e => setTurnoSel(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                      style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }}>
+                      {(catalogos?.turnos || []).map(t => (
+                        <option key={t.codigo} value={t.codigo}>{t.codigo} — {t.diasEnFaena} días en faena</option>
+                      ))}
+                    </select>
                   </div>
+
+                  <div className="min-w-[170px]">
+                    <label className="block mb-1.5 font-semibold uppercase tracking-wider" style={{ fontSize: 10, color: '#64748B' }}>Fecha de Inicio</label>
+                    <input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg text-sm outline-none"
+                      style={{ background: '#1E293B', border: '1px solid #334155', color: '#F1F5F9' }} />
+                  </div>
+
+                  <div className="min-w-[190px]">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="font-semibold uppercase tracking-wider" style={{ fontSize: 10, color: '#64748B' }}>Gap Mínimo Repetición</label>
+                      <span className="font-bold text-sm" style={{ color: '#10B981' }}>{gapDias} días</span>
+                    </div>
+                    <input type="range" min={1} max={7} value={gapDias} onChange={e => setGapDias(Number(e.target.value))}
+                      className="w-full accent-emerald-500" style={{ accentColor: '#10B981' }} />
+                  </div>
+
+                  {catalogos && (
+                    <div className="flex items-center gap-4 px-3 py-2 rounded-lg" style={{ background: '#090F1D', border: '1px solid #1E293B' }}>
+                      {[
+                        { label: 'Platos', val: catalogos.platos.filter(p => p.activo).length, icon: 'restaurant', color: '#10B981' },
+                        { label: 'Ensaladas', val: catalogos.ensaladas.filter(e => e.activo).length, icon: 'eco', color: '#34D399' },
+                        { label: 'Acomp.', val: catalogos.acompañamientos.filter(a => a.activo).length, icon: 'grain', color: '#F59E0B' },
+                      ].map(row => (
+                        <div key={row.label} className="flex items-center gap-1.5" title={row.label}>
+                          <span className="material-symbols-outlined" style={{ fontSize: 15, color: row.color }}>{row.icon}</span>
+                          <span className="font-bold text-sm text-white">{row.val}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 pt-3 xl:pt-0 border-t xl:border-t-0" style={{ borderColor: 'rgba(30,41,59,0.6)' }}>
+                  {dias.length > 0 && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: '#082F1E', border: '1px solid #065F46' }}>
+                      <span className="material-symbols-outlined shrink-0" style={{ fontSize: 16, color: '#10B981' }}>inventory_2</span>
+                      <div>
+                        <p className="font-semibold text-xs" style={{ color: '#10B981' }}>Bodega verificada</p>
+                        <p className="text-[10px]" style={{ color: '#34D399' }}>
+                          {turnoActual?.diasEnFaena} días · Gap {gapDias}d · {catalogos?.platos.filter(p => p.activo).length} platos
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <button onClick={generar} disabled={generando || !catalogos}
+                    className="flex-1 xl:flex-initial px-5 py-2.5 rounded-xl font-bold text-white text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
+                    style={{ background: generando ? '#065F46' : 'linear-gradient(135deg,#10B981,#059669)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                    {generando ? (
+                      <>
+                        <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#fff', borderTopColor: 'transparent' }} />
+                        Procesando IA...
+                      </>
+                    ) : (
+                      <>
+                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>auto_awesome</span>
+                        Generar Minuta Inteligente
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
-
-              {/* Catalog stats */}
-              {catalogos && (
-                <div className="rounded-xl p-4 space-y-3" style={{ background: '#0F172A', border: '1px solid #1E293B' }}>
-                  <h3 className="font-semibold text-xs uppercase tracking-wider" style={{ color: '#64748B' }}>Inventario del Catálogo</h3>
-                  {[
-                    { label: 'Platos Principales', val: catalogos.platos.filter(p => p.activo).length, icon: 'restaurant', color: '#10B981' },
-                    { label: 'Ensaladas Activas', val: catalogos.ensaladas.filter(e => e.activo).length, icon: 'eco', color: '#34D399' },
-                    { label: 'Acompañamientos', val: catalogos.acompañamientos.filter(a => a.activo).length, icon: 'grain', color: '#F59E0B' },
-                  ].map(row => (
-                    <div key={row.label} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined" style={{ fontSize: 15, color: row.color }}>{row.icon}</span>
-                        <span className="text-xs" style={{ color: '#94A3B8' }}>{row.label}</span>
-                      </div>
-                      <span className="font-bold text-sm text-white">{row.val}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Generate button */}
-              <button onClick={generar} disabled={generando || !catalogos}
-                className="w-full py-3 rounded-xl font-bold text-white text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ background: generando ? '#065F46' : 'linear-gradient(135deg,#10B981,#059669)', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                {generando ? (
-                  <>
-                    <div className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#fff', borderTopColor: 'transparent' }} />
-                    Procesando IA...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>auto_awesome</span>
-                    Generar Minuta Inteligente
-                  </>
-                )}
-              </button>
-
-              {dias.length > 0 && (
-                <div className="rounded-xl p-4" style={{ background: '#082F1E', border: '1px solid #065F46' }}>
-                  <div className="flex items-start gap-2">
-                    <span className="material-symbols-outlined mt-0.5" style={{ fontSize: 16, color: '#10B981' }}>inventory_2</span>
-                    <div>
-                      <p className="font-semibold text-sm" style={{ color: '#10B981' }}>Bodega verificada</p>
-                      <p className="text-xs mt-0.5" style={{ color: '#34D399' }}>
-                        {turnoActual?.diasEnFaena} días · Gap {gapDias}d · {catalogos?.platos.filter(p => p.activo).length} platos disponibles
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* RIGHT — Preview */}
-            <div className="xl:col-span-8 space-y-5">
+            {/* Resultado */}
+            <div className="space-y-5">
 
               {dias.length === 0 && !generando && (
                 <div className="flex flex-col items-center justify-center rounded-xl py-24"
