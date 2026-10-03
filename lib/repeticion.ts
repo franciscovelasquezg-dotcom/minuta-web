@@ -24,7 +24,7 @@ export function detectarRepeticiones(
       if (diff < diasMinimos) {
         alertas.set(a.key, 'repetido')
         alertas.set(b.key, 'repetido')
-      } else {
+      } else if (diff < diasMinimos + 2) {
         if (!alertas.has(a.key)) alertas.set(a.key, 'cercano')
         if (!alertas.has(b.key)) alertas.set(b.key, 'cercano')
       }

@@ -22,16 +22,25 @@ function lsSet(key: string, data: unknown) {
   try { localStorage.setItem(key, JSON.stringify({ data, ts: Date.now() })) } catch { /* cuota llena */ }
 }
 
+const _enVuelo = new Map<string, Promise<unknown>>()
+
 async function get<T>(tipo: string, params: Record<string, string> = {}): Promise<T> {
   const qs = new URLSearchParams({ tipo, ...params })
   const key = qs.toString()
   const mem = _memCache.get(key)
   if (mem && Date.now() - mem.ts < MEM_TTL) return mem.data as T
-  const res = await fetch(`/api/sheets?${qs}`)
-  const json = await res.json()
-  if (!json.ok) throw new Error(json.error)
-  _memCache.set(key, { data: json.data, ts: Date.now() })
-  return json.data
+  const pendiente = _enVuelo.get(key)
+  if (pendiente) return pendiente as Promise<T>
+  const p = fetch(`/api/sheets?${qs}`)
+    .then(res => res.json())
+    .then(json => {
+      if (!json.ok) throw new Error(json.error)
+      _memCache.set(key, { data: json.data, ts: Date.now() })
+      return json.data as T
+    })
+    .finally(() => _enVuelo.delete(key))
+  _enVuelo.set(key, p)
+  return p
 }
 
 export function invalidarCache() {
