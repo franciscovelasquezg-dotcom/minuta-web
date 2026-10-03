@@ -260,7 +260,7 @@ function guardarMinuta(body) {
       ]);
     });
   });
-  hoja.getRange(1, 1, filas.length, 10).setValues(filas);
+  hoja.getRange(1, 1, filas.length, 10).setValues(filas.map(f => f.map(v => (v === undefined || v === null) ? '' : v)));
 
   // Guardar snapshot en historial
   try {
