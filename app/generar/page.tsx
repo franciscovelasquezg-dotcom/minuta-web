@@ -398,7 +398,7 @@ export default function GenerarPage() {
                                   <td className="px-3 py-2 text-right">
                                     {nivelAlerta ? (
                                       <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap" style={{ background: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.3)' }} title={nivelAlerta === 'repetido' ? 'Repetición con gap menor al mínimo configurado' : 'Repetición cercana al gap mínimo'}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: 12 }}>warning</span>
+                                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: '#FCD34D' }} />
                                         {nivelAlerta === 'repetido' ? 'Gap corto' : 'Aviso Gap'}
                                       </span>
                                     ) : (
