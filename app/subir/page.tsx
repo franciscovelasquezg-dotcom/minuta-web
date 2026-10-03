@@ -26,24 +26,38 @@ function parsearTextoLibre(texto: string, archivo: string): DiaParsed[] {
 
   for (const line of lines) {
     const lower = line.toLowerCase()
-    const esDia = DIAS_SEMANA.some(d => lower.startsWith(d) || lower.includes(' ' + d + ' ') || lower.includes(' ' + d))
-    const fechaMatch = line.match(/\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}/)
-    if (esDia && (fechaMatch || lower.match(/día\s*\d+/i))) {
+    const nombreDiaEncontrado = DIAS_SEMANA.find(d => lower.startsWith(d) || lower.includes(' ' + d + ' ') || lower.includes(' ' + d) || lower.includes(d))
+    const fechaMatch = line.match(/\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?/)
+    const diaNumMatch = lower.match(/^d[ií]a\s*(\d+)/i)
+    // Heurística relajada: basta con nombre de día, "Día N", o una fecha sola al inicio de línea para abrir un nuevo día
+    const pareceInicioDia = !!nombreDiaEncontrado || !!diaNumMatch || (!!fechaMatch && line.trim().length < 25 && fechaMatch.index === 0)
+    if (pareceInicioDia) {
       pushServicio()
       if (diaActual) dias.push(diaActual)
       diaNum++
-      const diaSemana = DIAS_SEMANA.find(d => lower.includes(d)) || ''
-      diaActual = { dia: diaNum, fecha: fechaMatch ? fechaMatch[0] : '', diaSemana: diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1), servicios: [] }
+      diaActual = {
+        dia: diaNumMatch ? parseInt(diaNumMatch[1]) : diaNum,
+        fecha: fechaMatch ? fechaMatch[0] : '',
+        diaSemana: nombreDiaEncontrado ? nombreDiaEncontrado.charAt(0).toUpperCase() + nombreDiaEncontrado.slice(1) : '',
+        servicios: [],
+      }
       continue
     }
     if (/almuerzo/i.test(line)) { pushServicio(); servicioActual = { tipo: 'Almuerzo', platoPrincipal: '', ensalada: '', acompañamiento: '', estado: 'Por Confirmar' }; continue }
-    if (/cena/i.test(line)) { pushServicio(); servicioActual = { tipo: 'Cena', platoPrincipal: '', ensalada: '', acompañamiento: '', estado: 'Por Confirmar' }; continue }
-    if (!servicioActual) continue
-    if (/plato\s*principal|proteína|proteina/i.test(line)) { const v = line.replace(/.*:\s*/, '').trim(); if (v) servicioActual.platoPrincipal = v }
-    else if (/acompañ|acompan/i.test(line)) { const v = line.replace(/.*:\s*/, '').trim(); if (v) servicioActual.acompañamiento = v }
-    else if (/ensalada/i.test(line)) { const v = line.replace(/.*:\s*/, '').trim(); if (v) servicioActual.ensalada = v }
-    else if (/postre/i.test(line)) { const v = line.replace(/.*:\s*/, '').trim(); if (v) servicioActual.postre = v }
-    else if (!servicioActual.platoPrincipal && line.length > 3 && line.length < 60) { servicioActual.platoPrincipal = line }
+    if (/\bcena\b/i.test(line)) { pushServicio(); servicioActual = { tipo: 'Cena', platoPrincipal: '', ensalada: '', acompañamiento: '', estado: 'Por Confirmar' }; continue }
+    if (!servicioActual) {
+      // Ya se abrió un día (fecha/día de semana/"Día N") pero aún no hay marcador Almuerzo/Cena: asume Almuerzo implícito
+      if (diaActual && diaActual.servicios.length === 0 && line.length > 3 && line.length < 80) {
+        servicioActual = { tipo: 'Almuerzo', platoPrincipal: '', ensalada: '', acompañamiento: '', estado: 'Por Confirmar' }
+      } else continue
+    }
+    if (/plato\s*principal|proteína|proteina/i.test(line)) { const v = line.replace(/.*:\s*/, '').trim(); if (v) servicioActual!.platoPrincipal = v }
+    else if (/acompañ|acompan/i.test(line)) { const v = line.replace(/.*:\s*/, '').trim(); if (v) servicioActual!.acompañamiento = v }
+    else if (/ensalada/i.test(line)) { const v = line.replace(/.*:\s*/, '').trim(); if (v) servicioActual!.ensalada = v }
+    else if (/postre/i.test(line)) { const v = line.replace(/.*:\s*/, '').trim(); if (v) servicioActual!.postre = v }
+    else if (!servicioActual!.platoPrincipal && line.length > 3 && line.length < 60) { servicioActual!.platoPrincipal = line }
+    else if (!servicioActual!.acompañamiento && line.length > 3 && line.length < 60) { servicioActual!.acompañamiento = line }
+    else if (!servicioActual!.ensalada && line.length > 3 && line.length < 60) { servicioActual!.ensalada = line }
   }
   pushServicio()
   if (diaActual && diaActual.servicios.length > 0) dias.push(diaActual)
@@ -267,11 +281,13 @@ export default function SubirPage() {
   const [pasoActual, setPasoActual] = useState(0)
   const [pasos, setPasos] = useState<PasoProgreso[]>([])
   const [pctOcr, setPctOcr] = useState<number | null>(null)
+  const [textoDebug, setTextoDebug] = useState<string>('')
+  const [mostrarTextoDebug, setMostrarTextoDebug] = useState(false)
 
   const EXTENSIONES_IMAGEN = ['jpg', 'jpeg', 'png', 'webp']
 
   const procesar = async (file: File) => {
-    setError(''); setCargando(true); setArchivoNombre(file.name); setPasoActual(0); setPctOcr(null)
+    setError(''); setCargando(true); setArchivoNombre(file.name); setPasoActual(0); setPctOcr(null); setTextoDebug(''); setMostrarTextoDebug(false)
     try {
       const ext = file.name.split('.').pop()?.toLowerCase() || ''
       let dias: DiaParsed[] = []
@@ -285,6 +301,7 @@ export default function SubirPage() {
         setPasos(PASOS_DOCX)
         setPasoActual(0)
         const texto = await extraerTextoDocx(file)
+        setTextoDebug(texto)
         setPasoActual(2)
         dias = parsearTextoLibre(texto, file.name)
         setPasoActual(3)
@@ -294,8 +311,10 @@ export default function SubirPage() {
         setPasoActual(1)
         const texto = await ocrImagenes([file], pct => setPctOcr(pct))
         setPctOcr(null)
+        setTextoDebug(texto)
         if (texto.trim().length < 15) {
           setError('No se pudo reconocer texto en la foto. Asegúrate de que esté enfocada, con buena luz y sin inclinación — o ingresa la minuta manualmente en el Planificador.')
+          setMostrarTextoDebug(true)
           return
         }
         setPasoActual(2)
@@ -326,14 +345,17 @@ export default function SubirPage() {
           setPasoActual(3)
           texto = await ocrImagenes(canvases, pct => setPctOcr(pct))
           setPctOcr(null)
+          setTextoDebug(texto)
           if (texto.trim().length < 15) {
             setError('No se pudo reconocer texto en este PDF escaneado. Asegúrate de que la foto/escaneo esté enfocado y con buena luz — o ingresa la minuta manualmente en el Planificador.')
+            setMostrarTextoDebug(true)
             return
           }
           setPasoActual(4)
           dias = parsearTextoLibre(texto, file.name)
           setPasoActual(5)
         } else {
+          setTextoDebug(texto)
           setPasoActual(3)
           dias = parsearTextoLibre(texto, file.name)
           setPasoActual(4)
@@ -341,7 +363,11 @@ export default function SubirPage() {
       } else {
         setError('Formato no soportado. Usa .xlsx, .xls, .docx, .pdf, .jpg o .png'); return
       }
-      if (dias.length === 0) { setError('No se encontraron días. Verifica que el archivo tenga estructura de minuta.'); return }
+      if (dias.length === 0) {
+        setError('Se leyó el archivo pero no se reconoció estructura de días/servicios. Revisa el texto detectado abajo — si está incompleto o con errores, prueba con una foto más nítida o ingresa la minuta manualmente en el Planificador.')
+        setMostrarTextoDebug(true)
+        return
+      }
       setInforme(generarInforme(dias, file.name)); setTab('resumen')
     } catch (e) {
       console.error(e); setError('Error leyendo el archivo. Verifica que sea un archivo de minuta válido.')
@@ -543,9 +569,23 @@ export default function SubirPage() {
           </div>
 
           {error && (
-            <div className="mb-4 flex items-center gap-2 px-4 py-3 rounded-xl text-[13px] font-semibold" style={{ background: '#450a0a', border: '1px solid #f87171', color: '#fca5a5' }}>
-              <span className="material-symbols-outlined text-[18px]">error</span>
-              {error}
+            <div className="mb-4 rounded-xl text-[13px]" style={{ background: '#450a0a', border: '1px solid #f87171', color: '#fca5a5' }}>
+              <div className="flex items-center gap-2 px-4 py-3 font-semibold">
+                <span className="material-symbols-outlined text-[18px]">error</span>
+                {error}
+              </div>
+              {textoDebug && (
+                <div className="px-4 pb-3">
+                  <button onClick={() => setMostrarTextoDebug(v => !v)} className="text-[12px] font-semibold text-red-300 hover:text-white underline underline-offset-2">
+                    {mostrarTextoDebug ? 'Ocultar' : 'Ver'} texto detectado por OCR/lectura ({textoDebug.trim().length} caracteres)
+                  </button>
+                  {mostrarTextoDebug && (
+                    <pre className="mt-2 p-3 rounded-lg text-[11px] text-slate-300 whitespace-pre-wrap max-h-60 overflow-y-auto" style={{ background: '#0F172A', border: '1px solid #334155' }}>
+                      {textoDebug.trim() || '(sin texto)'}
+                    </pre>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
