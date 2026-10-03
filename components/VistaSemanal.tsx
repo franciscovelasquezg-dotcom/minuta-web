@@ -1,19 +1,18 @@
 import { DiaMinuta } from '@/types/minuta'
+import { clasificarProteina, TipoProteina } from '@/lib/proteina'
 
 interface Props {
   dias: DiaMinuta[]
   semana: number
 }
 
+const PROT_COLOR: Record<TipoProteina, string> = {
+  vacuno: '#EF4444', pollo: '#F59E0B', cerdo: '#FB7185', pescado: '#38BDF8',
+  pasta: '#F97316', legumbre: '#10B981', vegetariano: '#10B981', otro: '#64748B',
+}
+
 function getProteinColor(plato: string): string {
-  const n = plato.toLowerCase()
-  if (['vacuno','carne','asado','mechada','bistec','estofado','tortica','albóndiga'].some(k => n.includes(k))) return '#EF4444'
-  if (['pollo','gallina','pavo'].some(k => n.includes(k))) return '#F59E0B'
-  if (['cerdo','chuleta','costilla','pernil','medalla'].some(k => n.includes(k))) return '#FB7185'
-  if (['merluza','salmón','reineta','pescado','atún'].some(k => n.includes(k))) return '#38BDF8'
-  if (['spaghetti','mostaccioli','espirales','pasta','lasaña','tallarín'].some(k => n.includes(k))) return '#F97316'
-  if (['lenteja','poroto','garbanzo','arvejas','legumbre'].some(k => n.includes(k))) return '#10B981'
-  return '#64748B'
+  return PROT_COLOR[clasificarProteina(plato)]
 }
 
 export default function VistaSemanal({ dias, semana }: Props) {

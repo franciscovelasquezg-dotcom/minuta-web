@@ -4,6 +4,7 @@ import { Servicio, Estado } from '@/types/minuta'
 import { PLATOS_PRINCIPALES, ACOMPAÑAMIENTOS, ENSALADAS, POSTRES, ESTADOS } from '@/data/catalogos'
 import SelectField from './SelectField'
 import EstadoBadge from './EstadoBadge'
+import { clasificarProteina, PROTEINA_LABEL, TipoProteina } from '@/lib/proteina'
 
 interface Props {
   servicio: Servicio
@@ -14,21 +15,20 @@ interface Props {
   opcionesAcomps?: string[]
 }
 
+const PROT_CLS: Record<TipoProteina, string> = {
+  vacuno:      'bg-red-950/90 border-red-800 text-red-300',
+  pollo:       'bg-amber-950/80 border-amber-700 text-amber-300',
+  cerdo:       'bg-rose-950/90 border-rose-800 text-rose-300',
+  pescado:     'bg-blue-950/90 border-blue-800 text-blue-300',
+  pasta:       'bg-orange-950/90 border-orange-800 text-orange-300',
+  legumbre:    'bg-emerald-950/90 border-emerald-700 text-emerald-300',
+  vegetariano: 'bg-emerald-950/90 border-emerald-700 text-emerald-300',
+  otro:        'bg-slate-800/90 border-slate-600 text-slate-400',
+}
+
 function getProteinLabel(plato: string): { label: string; cls: string } {
-  const n = plato.toLowerCase()
-  if (['vacuno','carne','asado','mechada','bistec','lomo','osobuco','plateada','estofado','tortica','albóndiga'].some(k => n.includes(k)))
-    return { label: 'Vacuno', cls: 'bg-red-950/90 border-red-800 text-red-300' }
-  if (['pollo','gallina','pavo'].some(k => n.includes(k)))
-    return { label: 'Pollo', cls: 'bg-amber-950/80 border-amber-700 text-amber-300' }
-  if (['cerdo','chuleta','costilla','pernil','medalla'].some(k => n.includes(k)))
-    return { label: 'Cerdo', cls: 'bg-rose-950/90 border-rose-800 text-rose-300' }
-  if (['merluza','salmón','salmon','reineta','pescado','atún','atun'].some(k => n.includes(k)))
-    return { label: 'Pescado', cls: 'bg-blue-950/90 border-blue-800 text-blue-300' }
-  if (['tallarín','tallarin','fideos','pasta','lasaña','espirales','spaghetti','mostaccioli'].some(k => n.includes(k)))
-    return { label: 'Pasta', cls: 'bg-orange-950/90 border-orange-800 text-orange-300' }
-  if (['lenteja','poroto','garbanzo','arvejas','habas','legumbre'].some(k => n.includes(k)))
-    return { label: 'Legumbre', cls: 'bg-emerald-950/90 border-emerald-700 text-emerald-300' }
-  return { label: 'Otro', cls: 'bg-slate-800/90 border-slate-600 text-slate-400' }
+  const tipo = clasificarProteina(plato)
+  return { label: PROTEINA_LABEL[tipo], cls: PROT_CLS[tipo] }
 }
 
 const SVC_META: Record<string, { icon: string; color: string; time: string }> = {

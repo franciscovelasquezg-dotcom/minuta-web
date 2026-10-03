@@ -58,7 +58,8 @@ export default function Home() {
 
     getCatalogosConCache(
       aplicarCatalogos,   // inmediato desde localStorage (0 ms si hay caché)
-      aplicarCatalogos    // refresco en background — actualiza sin spinner
+      aplicarCatalogos,   // refresco en background — actualiza sin spinner
+      e => { setError('Error cargando catálogos: ' + e.message); setCargando(false) }
     )
 
     api.getMinuta(turnoSeleccionado)

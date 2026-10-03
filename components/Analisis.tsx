@@ -1,6 +1,7 @@
 'use client'
 
 import { DiaMinuta } from '@/types/minuta'
+import { clasificarProteina } from '@/lib/proteina'
 
 interface Props {
   dias: DiaMinuta[]
@@ -36,16 +37,6 @@ function calcularGapMinimo(pos: number[]): number {
   let min = Infinity
   for (let i = 1; i < pos.length; i++) min = Math.min(min, pos[i] - pos[i - 1])
   return min
-}
-
-function clasificarProteina(nombre: string): string {
-  const n = nombre.toLowerCase()
-  if (['vacuno','carne','asado','estofado','mechada','albóndiga','tortica','chopsui de v'].some(k => n.includes(k))) return 'vacuno'
-  if (['cerdo','chuleta','medalla'].some(k => n.includes(k))) return 'cerdo'
-  if (['pollo'].some(k => n.includes(k))) return 'pollo'
-  if (['spaghetti','mostaccioli','espirales','pasta'].some(k => n.includes(k))) return 'pasta'
-  if (['lentejas','legumbre'].some(k => n.includes(k))) return 'legumbre'
-  return 'otro'
 }
 
 const PROT_BADGE: Record<string, string> = {

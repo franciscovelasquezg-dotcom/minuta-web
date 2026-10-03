@@ -1,5 +1,3 @@
-const SHEETS_URL = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL!
-
 // ── Caché en memoria (sesión) ──────────────────────────────────
 const _memCache = new Map<string, { data: unknown; ts: number }>()
 const MEM_TTL = 30_000 // 30 s — segunda línea de defensa tras localStorage
@@ -29,7 +27,7 @@ async function get<T>(tipo: string, params: Record<string, string> = {}): Promis
   const key = qs.toString()
   const mem = _memCache.get(key)
   if (mem && Date.now() - mem.ts < MEM_TTL) return mem.data as T
-  const res = await fetch(`${SHEETS_URL}?${qs}`)
+  const res = await fetch(`/api/sheets?${qs}`)
   const json = await res.json()
   if (!json.ok) throw new Error(json.error)
   _memCache.set(key, { data: json.data, ts: Date.now() })
@@ -46,7 +44,8 @@ export function invalidarCache() {
 // luego refresca en background y notifica al llamador mediante el callback.
 export function getCatalogosConCache(
   onImmediate: (c: Catalogos) => void,
-  onRefreshed?: (c: Catalogos) => void
+  onRefreshed?: (c: Catalogos) => void,
+  onError?: (e: Error) => void
 ): void {
   const cached = lsGet<Catalogos>(LS_KEY)
   if (cached) {
@@ -64,7 +63,7 @@ export function getCatalogosConCache(
     lsSet(LS_KEY, fresh)
     onImmediate(fresh)
     if (onRefreshed) onRefreshed(fresh)
-  })
+  }).catch(e => onError?.(e instanceof Error ? e : new Error(String(e))))
 }
 
 async function post<T>(accion: string, body: object): Promise<T> {

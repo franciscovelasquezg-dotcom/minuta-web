@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import * as XLSX from 'xlsx'
 import AppHeader from '@/components/AppHeader'
+import { clasificarProteina as clasificarTipoProteina, PROTEINA_LABEL } from '@/lib/proteina'
 
 async function extraerTextoDocx(file: File): Promise<string> {
   const mammoth = await import('mammoth')
@@ -68,20 +69,8 @@ function parsearTextoLibre(texto: string, archivo: string): DiaParsed[] {
 interface ServicioParsed { tipo: string; ensalada: string; acompañamiento: string; platoPrincipal: string; postre?: string; estado: string }
 interface DiaParsed { dia: number; fecha: string; diaSemana: string; servicios: ServicioParsed[] }
 
-const PROTEINAS: { tipo: string; keywords: string[] }[] = [
-  { tipo: 'Vacuno',      keywords: ['vacuno','carne','asado','estofado','mechada','albóndiga','albondiga','bistec','lomo','osobuco','cazuela de vac','plateada','malaya'] },
-  { tipo: 'Cerdo',       keywords: ['cerdo','chuleta','medalla','costilla','pernil','tocino'] },
-  { tipo: 'Pollo',       keywords: ['pollo','gallina','pavo'] },
-  { tipo: 'Pescado',     keywords: ['pescado','merluza','salmón','salmon','atún','atun','congrio','reineta','jurel','sardina','camaron','camarón','marisco'] },
-  { tipo: 'Pasta',       keywords: ['spaghetti','mostaccioli','espirales','fettuccine','pasta','tallarín','tallarin','lasaña','lasana','macarrón','macarron'] },
-  { tipo: 'Legumbre',    keywords: ['lentejas','porotos','garbanzos','arvejas','habas','legumbre'] },
-  { tipo: 'Vegetariano', keywords: ['vegetariano','vegano','tofu','berenjena rellena','zapallo relleno'] },
-]
-
 function clasificarProteina(nombre: string): string {
-  const n = nombre.toLowerCase()
-  for (const p of PROTEINAS) { if (p.keywords.some(k => n.includes(k))) return p.tipo }
-  return 'Otro'
+  return PROTEINA_LABEL[clasificarTipoProteina(nombre)]
 }
 
 function extraerBase(nombre: string): string {
@@ -202,7 +191,6 @@ const PROT_BADGE: Record<string, string> = {
   Otro:        'bg-slate-800/80 border border-slate-600/60 text-slate-300',
 }
 
-const dkInput = 'w-full bg-[#0F172A] border border-[#334155] text-slate-200 rounded-lg p-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500'
 
 interface PasoProgreso { label: string; pct: number }
 

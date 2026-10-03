@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { api, MinutaAPI } from '@/lib/api'
 import AppHeader from '@/components/AppHeader'
 import { DiaMinuta } from '@/types/minuta'
+import { clasificarProteina } from '@/lib/proteina'
 
 function apiToDia(d: MinutaAPI['dias'][0]): DiaMinuta {
   return {
@@ -36,17 +37,6 @@ function contarFrecuencias(dias: DiaMinuta[], campo: 'platoPrincipal' | 'ensalad
 function gapMin(pos: number[]): number {
   if (pos.length < 2) return Infinity
   let m = Infinity; for (let i = 1; i < pos.length; i++) m = Math.min(m, pos[i] - pos[i - 1]); return m
-}
-
-function clasificarProteina(nombre: string): string {
-  const n = nombre.toLowerCase()
-  if (n.includes('vacuno') || n.includes('carne') || n.includes('asado') || n.includes('estofado') || n.includes('mechada') || n.includes('albóndiga') || n.includes('plateada') || n.includes('cazuela de v') || n.includes('osobuco')) return 'vacuno'
-  if (n.includes('cerdo') || n.includes('chuleta') || n.includes('medalla') || n.includes('costilla') || n.includes('pernil')) return 'cerdo'
-  if (n.includes('pollo') || n.includes('pechuga') || n.includes('gallina') || n.includes('pavo')) return 'pollo'
-  if (n.includes('spaghetti') || n.includes('pasta') || n.includes('tallarín') || n.includes('espirales') || n.includes('mostaccioli') || n.includes('lasaña')) return 'pasta'
-  if (n.includes('lentejas') || n.includes('porotos') || n.includes('garbanzos') || n.includes('arvejas') || n.includes('habas') || n.includes('legumbre')) return 'legumbre'
-  if (n.includes('salmón') || n.includes('merluza') || n.includes('pescado') || n.includes('reineta') || n.includes('congrio') || n.includes('jurel')) return 'pescado'
-  return 'otro'
 }
 
 const PROT_DOT: Record<string, string> = { vacuno: 'bg-red-500', cerdo: 'bg-sky-400', pollo: 'bg-amber-400', pasta: 'bg-violet-500', legumbre: 'bg-emerald-500', pescado: 'bg-blue-400', otro: 'bg-slate-400' }

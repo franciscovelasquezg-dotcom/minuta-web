@@ -5,7 +5,7 @@
 // ============================================================
 
 const SPREADSHEET_ID = '1weZUkkCj-yL6Z6sa47v54cPOr6yn3qYqwfpDV-teUck';
-const API_SECRET     = 'MinutaCasino2026_k9M3n7P4q2Z1w5Y6v8U0t3';
+// API_SECRET se define en secreto.js, que solo existe en clasp-src/ (gitignored) y en el proyecto Apps Script.
 const TZ             = 'America/Santiago';
 
 // Hojas del Sheets
@@ -29,17 +29,20 @@ function validarToken(t, sig) {
   if (!t || !sig) return false;
   const now = Math.floor(Date.now() / 1000);
   if (Math.abs(now - parseInt(t)) > 300) return false;
-  return computeHmac(String(t), API_SECRET) === String(sig);
+  const esperado = computeHmac(String(t), API_SECRET);
+  const recibido = String(sig);
+  if (esperado.length !== recibido.length) return false;
+  let diff = 0;
+  for (let i = 0; i < esperado.length; i++) diff |= esperado.charCodeAt(i) ^ recibido.charCodeAt(i);
+  return diff === 0;
 }
 
 // ── Router principal ──────────────────────────────────────────
 function doGet(e) {
   try {
+    if (!validarToken(e.parameter.t, e.parameter.sig)) return jsonError('Token inválido');
     const tipo = e.parameter.tipo || '';
     switch (tipo) {
-      case 'platos':          { const ss = SpreadsheetApp.openById(SPREADSHEET_ID); return jsonOk(getPlatos(ss)); }
-      case 'ensaladas':       { const ss = SpreadsheetApp.openById(SPREADSHEET_ID); return jsonOk(getEnsaladas(ss)); }
-      case 'acompañamientos': { const ss = SpreadsheetApp.openById(SPREADSHEET_ID); return jsonOk(getAcompañamientos(ss)); }
       case 'turnos':          { const ss = SpreadsheetApp.openById(SPREADSHEET_ID); return jsonOk(getTurnos(ss)); }
       case 'minuta':          return jsonOk(getMinuta(e.parameter.turno));
       case 'catalogos':       return jsonOk(getCatalogosCompletos());
@@ -244,20 +247,20 @@ function guardarMinuta(body) {
     hoja.clearContents();
   }
 
-  hoja.appendRow([turno, fechaInicio, diasMinimosRepeticion, casino]);
-  hoja.appendRow(['Dia', 'Fecha', 'DiaSemana', 'Servicio', 'Ensalada', 'Acompañamiento', 'Plato Principal', 'Postre', 'Opcion Hipo', 'Estado']);
-
+  // Una sola escritura en lote: appendRow por fila hace un viaje a Sheets por cada servicio (lento).
+  const filas = [
+    [turno, fechaInicio, diasMinimosRepeticion, casino, '', '', '', '', '', ''],
+    ['Dia', 'Fecha', 'DiaSemana', 'Servicio', 'Ensalada', 'Acompañamiento', 'Plato Principal', 'Postre', 'Opcion Hipo', 'Estado'],
+  ];
   (dias || []).forEach(dia => {
-    let primera = true;
-    (dia.servicios || []).forEach(svc => {
-      if (primera) {
-        hoja.appendRow([dia.dia, dia.fecha, dia.diaSemana, svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.postre || '', svc.opcionHipo || '', svc.estado]);
-        primera = false;
-      } else {
-        hoja.appendRow(['', '', '', svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.postre || '', svc.opcionHipo || '', svc.estado]);
-      }
+    (dia.servicios || []).forEach((svc, i) => {
+      filas.push([
+        i === 0 ? dia.dia : '', i === 0 ? dia.fecha : '', i === 0 ? dia.diaSemana : '',
+        svc.tipo, svc.ensalada, svc.acompañamiento, svc.platoPrincipal, svc.postre || '', svc.opcionHipo || '', svc.estado,
+      ]);
     });
   });
+  hoja.getRange(1, 1, filas.length, 10).setValues(filas);
 
   // Guardar snapshot en historial
   try {
@@ -268,7 +271,7 @@ function guardarMinuta(body) {
 
   // Notificación email
   try {
-    enviarNotificacion(turno, casino, fechaInicio, dias);
+    enviarNotificacion(ss, turno, casino, fechaInicio, dias);
   } catch(e) {
     Logger.log('Email error: ' + e.message);
   }
@@ -322,9 +325,8 @@ function getHistorial(turno) {
 
 // ── Notificación email ─────────────────────────────────────────
 
-function getConfigEmail() {
+function getConfigEmail(ss) {
   try {
-    const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
     const hoja = ss.getSheetByName(HOJA_CONFIG);
     if (!hoja) return null;
     const rows = hoja.getDataRange().getValues();
@@ -335,8 +337,8 @@ function getConfigEmail() {
   }
 }
 
-function enviarNotificacion(turno, casino, fechaInicio, dias) {
-  const email = getConfigEmail() || Session.getActiveUser().getEmail();
+function enviarNotificacion(ss, turno, casino, fechaInicio, dias) {
+  const email = getConfigEmail(ss) || Session.getActiveUser().getEmail();
   if (!email) return;
 
   const totalDias    = (dias || []).length;

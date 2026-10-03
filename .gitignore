@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# Apps Script: copia local para clasp push; contiene secreto.js con API_SECRET
+clasp-src/
+!.env.example

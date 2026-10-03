@@ -7,6 +7,7 @@ import { DiaMinuta, Servicio } from '@/types/minuta'
 import { detectarRepeticiones } from '@/lib/repeticion'
 import DiaCard from '@/components/DiaCard'
 import AppHeader from '@/components/AppHeader'
+import { clasificarProteina } from '@/lib/proteina'
 
 const PROT_BADGE: Record<string, string> = {
   vacuno:   'bg-red-950/80 border border-red-800/60 text-red-400',
@@ -22,15 +23,6 @@ const PROT_BAR: Record<string, string> = {
   pasta: '#F97316', legumbre: '#10B981', otro: '#64748B',
 }
 
-function clasificarTipo(nombre: string): string {
-  const n = nombre.toLowerCase()
-  if (n.includes('vacuno') || n.includes('carne') || n.includes('asado') || n.includes('estofado') || n.includes('mechada') || n.includes('albóndiga') || n.includes('tortica')) return 'vacuno'
-  if (n.includes('cerdo') || n.includes('chuleta') || n.includes('medalla')) return 'cerdo'
-  if (n.includes('pollo')) return 'pollo'
-  if (n.includes('spaghetti') || n.includes('mostaccioli') || n.includes('espirales') || n.includes('pasta')) return 'pasta'
-  if (n.includes('lentejas') || n.includes('legumbre')) return 'legumbre'
-  return 'otro'
-}
 
 
 export default function GenerarPage() {
@@ -109,7 +101,7 @@ export default function GenerarPage() {
   const conteoTipos = useMemo(() => {
     const m: Record<string, number> = {}
     dias.forEach(d => d.servicios.forEach(s => {
-      const t = clasificarTipo(s.platoPrincipal)
+      const t = clasificarProteina(s.platoPrincipal)
       m[t] = (m[t] || 0) + 1
     }))
     return m
@@ -129,7 +121,7 @@ export default function GenerarPage() {
       .map((dia, di) => ({ dia, di }))
       .filter(({ dia }) => dia.servicios.some(s =>
         s.platoPrincipal.toLowerCase().includes(q) ||
-        clasificarTipo(s.platoPrincipal).includes(q) ||
+        clasificarProteina(s.platoPrincipal).includes(q) ||
         s.acompañamiento?.toLowerCase().includes(q) ||
         s.ensalada?.toLowerCase().includes(q)
       ))
@@ -139,7 +131,7 @@ export default function GenerarPage() {
   const platosUnicos = new Set(dias.flatMap(d => d.servicios.map(s => s.platoPrincipal))).size
   const totalPlatos = dias.flatMap(d => d.servicios.map(s => s.platoPrincipal)).length
   const variedadPct = totalPlatos > 0 ? Math.round(platosUnicos / totalPlatos * 100) : 0
-  const asadosDom = dias.filter(d => new Date(d.fecha + 'T12:00:00').getDay() === 0 && d.servicios.some(s => s.platoPrincipal.toLowerCase().includes('asado'))).length
+  const asadosDom = dias.filter(d => d.diaSemana === 'Domingo' && d.servicios.some(s => s.platoPrincipal.toLowerCase().includes('asado'))).length
 
   return (
     <div className="min-h-screen" style={{ background: '#0B0F19', color: '#F1F5F9', fontFamily: 'Manrope, sans-serif' }}>
@@ -356,7 +348,7 @@ export default function GenerarPage() {
                             <tr><td colSpan={7} className="px-3 py-6 text-center" style={{ color: '#64748B' }}>Sin coincidencias para &quot;{filtroTabla}&quot;</td></tr>
                           )}
                           {diasFiltrados.map(({ dia, di }) => {
-                            const esDomingo = new Date(dia.fecha + 'T12:00:00').getDay() === 0
+                            const esDomingo = dia.diaSemana === 'Domingo'
                             const diaTieneAlerta = dia.servicios.some((_, si) => alertas.has(`${di}-${si}`))
                             return dia.servicios.map((svc, si) => {
                               const nivelAlerta = alertas.get(`${di}-${si}`)
@@ -388,8 +380,8 @@ export default function GenerarPage() {
                                   <td className="px-3 py-2" style={{ maxWidth: 260 }}>
                                     <div className="flex items-center gap-2 flex-nowrap min-w-0">
                                       <span className="truncate" title={svc.platoPrincipal} style={{ color: '#E2E8F0' }}>{svc.platoPrincipal}</span>
-                                      <span className={`px-1.5 py-0.5 rounded text-xs font-bold uppercase shrink-0 ${PROT_BADGE[clasificarTipo(svc.platoPrincipal)] || PROT_BADGE.otro}`}>
-                                        {clasificarTipo(svc.platoPrincipal)}
+                                      <span className={`px-1.5 py-0.5 rounded text-xs font-bold uppercase shrink-0 ${PROT_BADGE[clasificarProteina(svc.platoPrincipal)] || PROT_BADGE.otro}`}>
+                                        {clasificarProteina(svc.platoPrincipal)}
                                       </span>
                                     </div>
                                   </td>

@@ -1,5 +1,6 @@
 import { Plato, Ensalada, Acompañamiento, Turno } from './api'
 import { POSTRES } from '@/data/catalogos'
+import { clasificarProteina } from './proteina'
 import { DiaMinuta, Servicio } from '@/types/minuta'
 
 const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
@@ -12,16 +13,6 @@ const PROPORCION_IDEAL: Record<string, number> = {
   pasta:    0.15,
   legumbre: 0.10,
   otro:     0.00,
-}
-
-function clasificarTipo(nombre: string): string {
-  const n = nombre.toLowerCase()
-  if (n.includes('vacuno') || n.includes('carne') || n.includes('asado') || n.includes('estofado') || n.includes('mechada') || n.includes('albóndiga') || n.includes('tortica') || n.includes('chopsui de v')) return 'vacuno'
-  if (n.includes('cerdo') || n.includes('chuleta') || n.includes('medalla')) return 'cerdo'
-  if (n.includes('pollo')) return 'pollo'
-  if (n.includes('spaghetti') || n.includes('mostaccioli') || n.includes('espirales') || n.includes('pasta')) return 'pasta'
-  if (n.includes('lentejas') || n.includes('legumbre')) return 'legumbre'
-  return 'otro'
 }
 
 // Shuffle determinístico con seed (para resultados reproducibles)
@@ -81,7 +72,7 @@ function elegirPlato(platos: Plato[], ctx: SlotContext, totalServicios: number, 
 
   // Scoring: priorizar tipos que están por debajo de la proporción ideal
   const scored = candidatos.map(p => {
-    const tipo = clasificarTipo(p.nombre)
+    const tipo = clasificarProteina(p.nombre)
     const usado = ctx.conteoTipos[tipo] || 0
     const ideal = PROPORCION_IDEAL[tipo] || 0
     const realPct = totalServicios > 0 ? usado / totalServicios : 0
@@ -125,19 +116,6 @@ function elegirAcompañamiento(acomps: Acompañamiento[], plato: Plato, ctx: Slo
     !ctx.usadosAcompsRecientes.slice(-2).includes(a.id)
   )
   return candidatos[ctx.diaIndex % Math.max(1, candidatos.length)] || acomps[0]
-}
-
-function elegirEnsalada(ensaladas: Ensalada[], ctx: SlotContext, totalSlots: number): Ensalada {
-  const disponibles = ensaladas.filter(e => e.activo && !ctx.usadosEnsaladas.has(e.id))
-
-  // Si ya usamos todas, resetear (ciclos largos)
-  if (disponibles.length === 0) {
-    ctx.usadosEnsaladas.clear()
-    return ensaladas.filter(e => e.activo)[ctx.diaIndex % ensaladas.length]
-  }
-
-  // Distribuir uniformemente — elegir la siguiente en orden rotativo
-  return disponibles[0]
 }
 
 export function generarMinuta(
@@ -188,7 +166,7 @@ export function generarMinuta(
       const acomp = elegirAcompañamiento(acomps, plato, ctx)
 
       // Ensalada — rotar sin repetir
-      let ensalada = ensaladasOrdenadas[ensaladaIdx % ensaladasOrdenadas.length]
+      const ensalada = ensaladasOrdenadas[ensaladaIdx % ensaladasOrdenadas.length]
       ensaladaIdx++
 
       // Registrar usos
@@ -199,7 +177,7 @@ export function generarMinuta(
       usadosAcompsRecientes.push(acomp.id)
       if (usadosAcompsRecientes.length > 4) usadosAcompsRecientes.shift()
 
-      const tipoPlato = clasificarTipo(plato.nombre)
+      const tipoPlato = clasificarProteina(plato.nombre)
       conteoTipos[tipoPlato] = (conteoTipos[tipoPlato] || 0) + 1
 
       // Postre rotativo simple
@@ -207,7 +185,7 @@ export function generarMinuta(
       const postre = postresActivos[(i * 2 + (tipo === 'Cena' ? 1 : 0)) % postresActivos.length]
 
       // Opción hipocalórica: bowl de proteína del día + ensalada del día
-      const tipoProteina = clasificarTipo(plato.nombre)
+      const tipoProteina = clasificarProteina(plato.nombre)
       const proteinaLabel: Record<string, string> = {
         vacuno: 'vacuno', cerdo: 'cerdo', pollo: 'pollo',
         pasta: 'proteína vegetal', legumbre: 'legumbre', otro: 'proteína del día',
