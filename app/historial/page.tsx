@@ -32,7 +32,7 @@ export default function HistorialPage() {
 
       {/* Page title bar */}
       <div className="pt-16" style={{ borderBottom: '1px solid #1E293B', background: '#0F172A' }}>
-        <div className="max-w-screen-xl mx-auto px-8 py-4 flex items-center justify-between">
+        <div className="max-w-[1720px] mx-auto px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined" style={{ color: '#10B981', fontSize: 22 }}>history</span>
             <div>
@@ -63,7 +63,7 @@ export default function HistorialPage() {
         </div>
       </div>
 
-      <main className="max-w-screen-xl mx-auto px-8 py-6">
+      <main className="max-w-[1720px] mx-auto px-8 py-6">
         {error && (
           <div className="mb-4 p-3 rounded-xl text-sm" style={{ background: '#450A0A', border: '1px solid #991B1B', color: '#FCA5A5' }}>{error}</div>
         )}

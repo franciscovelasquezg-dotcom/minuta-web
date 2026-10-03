@@ -147,7 +147,7 @@ export default function GenerarPage() {
 
       {/* Page title */}
       <div style={{ borderBottom: '1px solid #1E293B', background: '#0F172A' }}>
-        <div className="max-w-screen-xl mx-auto px-6 py-4">
+        <div className="max-w-[1720px] mx-auto px-6 py-4">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined" style={{ color: '#10B981', fontSize: 22 }}>auto_awesome</span>
             <div>
@@ -162,7 +162,7 @@ export default function GenerarPage() {
         </div>
       </div>
 
-      <main className="max-w-screen-xl mx-auto px-6 py-6 pt-20">
+      <main className="max-w-[1720px] mx-auto px-6 py-6 pt-20">
         {cargando ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
             <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#10B981', borderTopColor: 'transparent' }} />
@@ -490,7 +490,7 @@ export default function GenerarPage() {
       {/* Sticky footer */}
       {dias.length > 0 && (
         <div className="sticky bottom-0 z-30" style={{ background: '#0F172A', borderTop: '1px solid #1E293B' }}>
-          <div className="max-w-screen-xl mx-auto px-6 py-3 flex items-center justify-between gap-3">
+          <div className="max-w-[1720px] mx-auto px-6 py-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#10B981' }}>check_circle</span>
               <span className="text-sm font-medium text-white">{dias.length} días generados</span>
