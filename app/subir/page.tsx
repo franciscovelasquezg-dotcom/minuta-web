@@ -239,19 +239,88 @@ const PASOS_IMG: PasoProgreso[] = [
   { label: 'Generando informe de variedad', pct: 92 },
 ]
 
-async function ocrImagenes(images: (HTMLCanvasElement | File)[], onProgress: (pct: number) => void): Promise<string> {
+async function archivoACanvas(file: File): Promise<HTMLCanvasElement> {
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const el = new window.Image()
+    el.onload = () => resolve(el)
+    el.onerror = reject
+    el.src = URL.createObjectURL(file)
+  })
+  const canvas = document.createElement('canvas')
+  canvas.width = img.naturalWidth
+  canvas.height = img.naturalHeight
+  canvas.getContext('2d')!.drawImage(img, 0, 0)
+  URL.revokeObjectURL(img.src)
+  return canvas
+}
+
+function rotarCanvas(src: HTMLCanvasElement, grados: 90 | 180 | 270): HTMLCanvasElement {
+  const canvas = document.createElement('canvas')
+  const girado90 = grados === 90 || grados === 270
+  canvas.width = girado90 ? src.height : src.width
+  canvas.height = girado90 ? src.width : src.height
+  const ctx = canvas.getContext('2d')!
+  ctx.translate(canvas.width / 2, canvas.height / 2)
+  ctx.rotate(grados * Math.PI / 180)
+  ctx.drawImage(src, -src.width / 2, -src.height / 2)
+  return canvas
+}
+
+// Puntúa qué tan "reconocible como minuta" es un texto — usado para detectar
+// la orientación correcta cuando la foto viene rotada (OCR de texto rotado
+// produce palabras irreconocibles/espejadas, ej. "ENSALADA" → "VSIN3").
+function puntajeMinuta(texto: string): number {
+  const t = texto.toLowerCase()
+  let score = 0
+  ;['lunes','martes','miércoles','miercoles','jueves','viernes','sábado','sabado','domingo'].forEach(d => { if (t.includes(d)) score += 3 })
+  ;['almuerzo','cena','ensalada','plato','acompañ','acompan','menu','menú'].forEach(k => { if (t.includes(k)) score += 2 })
+  const fechas = t.match(/\d{1,2}[\/\-]\d{1,2}/g)
+  score += Math.min(6, (fechas?.length || 0))
+  return score
+}
+
+async function ocrCanvas(canvas: HTMLCanvasElement, onPaso?: (frac: number) => void): Promise<string> {
   const Tesseract = await import('tesseract.js')
+  const { data } = await Tesseract.recognize(canvas, 'spa', {
+    logger: (m: { status: string; progress: number }) => {
+      if (m.status === 'recognizing text' && onPaso) onPaso(m.progress)
+    },
+  })
+  return data.text
+}
+
+// Prueba la imagen en varias rotaciones y se queda con la que produzca texto
+// más reconocible como minuta (soluciona fotos tomadas o escaneadas giradas).
+async function ocrConRotacionAutomatica(canvasBase: HTMLCanvasElement, onProgress: (pct: number) => void): Promise<string> {
+  const candidatos: { grados: number; canvas: HTMLCanvasElement }[] = [
+    { grados: 0, canvas: canvasBase },
+    { grados: 180, canvas: rotarCanvas(canvasBase, 180) },
+  ]
+  let mejorTexto = ''
+  let mejorScore = -1
+  for (let i = 0; i < candidatos.length; i++) {
+    const texto = await ocrCanvas(candidatos[i].canvas, frac => onProgress(((i + frac) / 4) * 100))
+    const score = puntajeMinuta(texto)
+    if (score > mejorScore) { mejorScore = score; mejorTexto = texto }
+    if (score >= 6) return mejorTexto // suficientemente bueno, no seguir probando
+  }
+  // Ninguna de las dos orientaciones obvias dio buen resultado: prueba 90° y 270°
+  for (const grados of [90, 270] as const) {
+    const i = grados === 90 ? 2 : 3
+    const texto = await ocrCanvas(rotarCanvas(canvasBase, grados), frac => onProgress(((i + frac) / 4) * 100))
+    const score = puntajeMinuta(texto)
+    if (score > mejorScore) { mejorScore = score; mejorTexto = texto }
+    if (score >= 6) return mejorTexto
+  }
+  return mejorTexto
+}
+
+async function ocrImagenes(images: (HTMLCanvasElement | File)[], onProgress: (pct: number) => void): Promise<string> {
   let texto = ''
   for (let i = 0; i < images.length; i++) {
-    const { data } = await Tesseract.recognize(images[i], 'spa', {
-      logger: (m: { status: string; progress: number }) => {
-        if (m.status === 'recognizing text') {
-          const pctGlobal = ((i + m.progress) / images.length) * 100
-          onProgress(pctGlobal)
-        }
-      },
-    })
-    texto += data.text + '\n'
+    const canvas = images[i] instanceof File ? await archivoACanvas(images[i] as File) : images[i] as HTMLCanvasElement
+    const parcial = await ocrConRotacionAutomatica(canvas, pct => onProgress((i + pct / 100) / images.length * 100))
+    texto += parcial + '\n'
   }
   return texto
 }
