@@ -45,6 +45,7 @@ export default function GenerarPage() {
   const [guardando, setGuardando] = useState(false)
   const [guardado, setGuardado] = useState(false)
   const [semanaActual, setSemanaActual] = useState(0)
+  const [filtroTabla, setFiltroTabla] = useState('')
 
   useEffect(() => {
     api.getCatalogos()
@@ -120,6 +121,19 @@ export default function GenerarPage() {
     for (let i = 0; i < dias.length; i += 7) s.push(dias.slice(i, i + 7))
     return s
   }, [dias])
+
+  const diasFiltrados = useMemo(() => {
+    const q = filtroTabla.trim().toLowerCase()
+    if (!q) return dias.map((dia, di) => ({ dia, di }))
+    return dias
+      .map((dia, di) => ({ dia, di }))
+      .filter(({ dia }) => dia.servicios.some(s =>
+        s.platoPrincipal.toLowerCase().includes(q) ||
+        clasificarTipo(s.platoPrincipal).includes(q) ||
+        s.acompañamiento?.toLowerCase().includes(q) ||
+        s.ensalada?.toLowerCase().includes(q)
+      ))
+  }, [dias, filtroTabla])
 
   const totalServicios = dias.reduce((acc, d) => acc + d.servicios.length, 0)
   const platosUnicos = new Set(dias.flatMap(d => d.servicios.map(s => s.platoPrincipal))).size
@@ -322,62 +336,92 @@ export default function GenerarPage() {
 
                   {/* Schedule table */}
                   <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #1E293B' }}>
-                    <div className="px-4 py-3 flex items-center gap-2" style={{ background: '#0F172A', borderBottom: '1px solid #1E293B' }}>
+                    <div className="px-4 py-3 flex flex-wrap items-center gap-3" style={{ background: '#0F172A', borderBottom: '1px solid #1E293B' }}>
                       <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#10B981' }}>table_chart</span>
-                      <span className="font-semibold text-sm text-white">Cronograma Generado</span>
-                      <span className="ml-auto text-xs px-2 py-0.5 rounded-full" style={{ background: '#082F1E', color: '#10B981', border: '1px solid #065F46' }}>
-                        {dias.length} días
-                      </span>
+                      <div>
+                        <span className="font-semibold text-sm text-white block">Cronograma Generado — Matriz de Turnos</span>
+                        <span className="text-[11px]" style={{ color: '#64748B' }}>{dias.length} días programados (Almuerzo &amp; Cena)</span>
+                      </div>
+                      <div className="ml-auto flex items-center gap-2">
+                        <div className="relative">
+                          <span className="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2" style={{ fontSize: 14, color: '#475569' }}>search</span>
+                          <input value={filtroTabla} onChange={e => setFiltroTabla(e.target.value)} placeholder="Filtrar plato o proteína..."
+                            className="pl-7 pr-2.5 py-1.5 rounded-lg text-xs outline-none w-48"
+                            style={{ background: '#090F1D', border: '1px solid #334155', color: '#CBD5E1' }} />
+                        </div>
+                        <span className="text-xs px-2 py-0.5 rounded-full whitespace-nowrap" style={{ background: '#082F1E', color: '#10B981', border: '1px solid #065F46' }}>
+                          {diasFiltrados.length} / {dias.length} días
+                        </span>
+                      </div>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full" style={{ borderCollapse: 'collapse', fontSize: 12 }}>
                         <thead>
                           <tr style={{ background: '#0F172A', borderBottom: '2px solid #1E293B' }}>
-                            {['#', 'Fecha', 'Servicio', 'Plato Principal', 'Acompañamiento', 'Ensalada'].map(h => (
-                              <th key={h} className="px-3 py-2.5 text-left font-semibold uppercase tracking-wider" style={{ color: '#475569', fontSize: 10 }}>{h}</th>
+                            {['#', 'Fecha', 'Servicio', 'Plato Principal', 'Acompañamiento', 'Ensalada', 'Validación'].map(h => (
+                              <th key={h} className={`px-3 py-2.5 font-semibold uppercase tracking-wider ${h === 'Validación' ? 'text-right' : 'text-left'}`} style={{ color: '#475569', fontSize: 10 }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {dias.map((dia, di) => {
+                          {diasFiltrados.length === 0 && (
+                            <tr><td colSpan={7} className="px-3 py-6 text-center" style={{ color: '#64748B' }}>Sin coincidencias para &quot;{filtroTabla}&quot;</td></tr>
+                          )}
+                          {diasFiltrados.map(({ dia, di }) => {
                             const esDomingo = new Date(dia.fecha + 'T12:00:00').getDay() === 0
-                            return dia.servicios.map((svc, si) => (
-                              <tr key={`${di}-${si}`}
-                                style={{
-                                  background: esDomingo ? '#271E10' : di % 2 === 0 ? '#0B0F19' : '#0D1320',
-                                  borderBottom: '1px solid #1E293B',
-                                  borderLeft: esDomingo ? '3px solid #78350F' : undefined,
-                                }}>
-                                {si === 0 && (
-                                  <td rowSpan={dia.servicios.length} className="px-3 py-2 font-bold text-center" style={{ color: '#475569', width: 32, verticalAlign: 'middle' }}>
-                                    {di + 1}
+                            const diaTieneAlerta = dia.servicios.some((_, si) => alertas.has(`${di}-${si}`))
+                            return dia.servicios.map((svc, si) => {
+                              const nivelAlerta = alertas.get(`${di}-${si}`)
+                              return (
+                                <tr key={`${di}-${si}`}
+                                  style={{
+                                    background: diaTieneAlerta ? 'rgba(245,158,11,0.06)' : esDomingo ? '#271E10' : di % 2 === 0 ? '#0B0F19' : '#0D1320',
+                                    borderBottom: si === dia.servicios.length - 1 ? '2px solid #1E293B' : '1px solid #1E293B',
+                                    borderLeft: diaTieneAlerta ? '3px solid #F59E0B' : esDomingo ? '3px solid #78350F' : undefined,
+                                  }}>
+                                  {si === 0 && (
+                                    <td rowSpan={dia.servicios.length} className="px-3 py-2 font-bold text-center" style={{ color: diaTieneAlerta ? '#FBBF24' : '#475569', width: 32, verticalAlign: 'middle' }}>
+                                      {di + 1}
+                                    </td>
+                                  )}
+                                  {si === 0 && (
+                                    <td rowSpan={dia.servicios.length} className="px-3 py-2" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
+                                      <div className="flex items-center gap-1.5">
+                                        {esDomingo && <span className="material-symbols-outlined" style={{ fontSize: 13, color: '#F59E0B' }}>star</span>}
+                                        <span className="font-medium" style={{ color: esDomingo ? '#FDE68A' : '#CBD5E1' }}>{dia.fecha}</span>
+                                      </div>
+                                    </td>
+                                  )}
+                                  <td className="px-3 py-2">
+                                    <span className="px-2 py-0.5 rounded text-xs font-semibold uppercase" style={{ background: svc.tipo === 'Cena' ? 'rgba(59,130,246,0.1)' : 'rgba(245,158,11,0.1)', color: svc.tipo === 'Cena' ? '#93C5FD' : '#FCD34D', border: `1px solid ${svc.tipo === 'Cena' ? 'rgba(59,130,246,0.2)' : 'rgba(245,158,11,0.2)'}` }}>
+                                      {svc.tipo}
+                                    </span>
                                   </td>
-                                )}
-                                {si === 0 && (
-                                  <td rowSpan={dia.servicios.length} className="px-3 py-2" style={{ verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                                    <div className="flex items-center gap-1.5">
-                                      {esDomingo && <span className="material-symbols-outlined" style={{ fontSize: 13, color: '#F59E0B' }}>star</span>}
-                                      <span className="font-medium" style={{ color: esDomingo ? '#FDE68A' : '#CBD5E1' }}>{dia.fecha}</span>
+                                  <td className="px-3 py-2" style={{ maxWidth: 260 }}>
+                                    <div className="flex items-center gap-2 flex-nowrap min-w-0">
+                                      <span className="truncate" title={svc.platoPrincipal} style={{ color: '#E2E8F0' }}>{svc.platoPrincipal}</span>
+                                      <span className={`px-1.5 py-0.5 rounded text-xs font-bold uppercase shrink-0 ${PROT_BADGE[clasificarTipo(svc.platoPrincipal)] || PROT_BADGE.otro}`}>
+                                        {clasificarTipo(svc.platoPrincipal)}
+                                      </span>
                                     </div>
                                   </td>
-                                )}
-                                <td className="px-3 py-2">
-                                  <span className="px-2 py-0.5 rounded text-xs font-semibold uppercase" style={{ background: '#1E293B', color: '#94A3B8' }}>
-                                    {svc.tipo}
-                                  </span>
-                                </td>
-                                <td className="px-3 py-2" style={{ maxWidth: 260 }}>
-                                  <div className="flex items-center gap-2 flex-nowrap min-w-0">
-                                    <span className="truncate" title={svc.platoPrincipal} style={{ color: '#E2E8F0' }}>{svc.platoPrincipal}</span>
-                                    <span className={`px-1.5 py-0.5 rounded text-xs font-bold uppercase shrink-0 ${PROT_BADGE[clasificarTipo(svc.platoPrincipal)] || PROT_BADGE.otro}`}>
-                                      {clasificarTipo(svc.platoPrincipal)}
-                                    </span>
-                                  </div>
-                                </td>
-                                <td className="px-3 py-2 truncate" style={{ color: '#94A3B8', maxWidth: 180 }} title={svc.acompañamiento}>{svc.acompañamiento}</td>
-                                <td className="px-3 py-2 truncate" style={{ color: '#94A3B8', maxWidth: 180 }} title={svc.ensalada}>{svc.ensalada}</td>
-                              </tr>
-                            ))
+                                  <td className="px-3 py-2 truncate" style={{ color: '#94A3B8', maxWidth: 180 }} title={svc.acompañamiento}>{svc.acompañamiento}</td>
+                                  <td className="px-3 py-2 truncate" style={{ color: '#94A3B8', maxWidth: 180 }} title={svc.ensalada}>{svc.ensalada}</td>
+                                  <td className="px-3 py-2 text-right">
+                                    {nivelAlerta ? (
+                                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold whitespace-nowrap" style={{ background: 'rgba(245,158,11,0.15)', color: '#FCD34D', border: '1px solid rgba(245,158,11,0.3)' }} title={nivelAlerta === 'repetido' ? 'Repetición con gap menor al mínimo configurado' : 'Repetición cercana al gap mínimo'}>
+                                        <span className="material-symbols-outlined" style={{ fontSize: 12 }}>warning</span>
+                                        {nivelAlerta === 'repetido' ? 'Gap corto' : 'Aviso Gap'}
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold" style={{ color: '#34D399' }}>
+                                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#34D399' }} />OK
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              )
+                            })
                           })}
                         </tbody>
                       </table>
