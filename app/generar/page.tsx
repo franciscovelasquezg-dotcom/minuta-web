@@ -366,16 +366,16 @@ export default function GenerarPage() {
                                     {svc.tipo}
                                   </span>
                                 </td>
-                                <td className="px-3 py-2">
-                                  <div className="flex items-center gap-2">
-                                    <span style={{ color: '#E2E8F0' }}>{svc.platoPrincipal}</span>
-                                    <span className={`px-1.5 py-0.5 rounded text-xs font-bold uppercase ${PROT_BADGE[clasificarTipo(svc.platoPrincipal)] || PROT_BADGE.otro}`}>
+                                <td className="px-3 py-2" style={{ maxWidth: 260 }}>
+                                  <div className="flex items-center gap-2 flex-nowrap min-w-0">
+                                    <span className="truncate" title={svc.platoPrincipal} style={{ color: '#E2E8F0' }}>{svc.platoPrincipal}</span>
+                                    <span className={`px-1.5 py-0.5 rounded text-xs font-bold uppercase shrink-0 ${PROT_BADGE[clasificarTipo(svc.platoPrincipal)] || PROT_BADGE.otro}`}>
                                       {clasificarTipo(svc.platoPrincipal)}
                                     </span>
                                   </div>
                                 </td>
-                                <td className="px-3 py-2" style={{ color: '#94A3B8' }}>{svc.acompañamiento}</td>
-                                <td className="px-3 py-2" style={{ color: '#94A3B8' }}>{svc.ensalada}</td>
+                                <td className="px-3 py-2 truncate" style={{ color: '#94A3B8', maxWidth: 180 }} title={svc.acompañamiento}>{svc.acompañamiento}</td>
+                                <td className="px-3 py-2 truncate" style={{ color: '#94A3B8', maxWidth: 180 }} title={svc.ensalada}>{svc.ensalada}</td>
                               </tr>
                             ))
                           })}
