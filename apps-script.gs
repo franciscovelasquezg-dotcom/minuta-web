@@ -47,6 +47,7 @@ function doGet(e) {
       case 'minuta':          return jsonOk(getMinuta(e.parameter.turno));
       case 'catalogos':       return jsonOk(getCatalogosCompletos());
       case 'historial':       return jsonOk(getHistorial(e.parameter.turno));
+      case 'metas':           return jsonOk(getMetas());
       default:                return jsonError('tipo no reconocido');
     }
   } catch (err) {
@@ -68,6 +69,7 @@ function doPost(e) {
       case 'guardar_ensalada': return jsonOk(guardarEnsalada(body));
       case 'guardar_acomp':    return jsonOk(guardarAcompañamiento(body));
       case 'nuevo_ciclo':      return jsonOk(nuevoCiclo(body));
+      case 'guardar_metas':    return jsonOk(guardarMetas(body));
       default:                 return jsonError('acción no reconocida');
     }
   } catch (err) {
@@ -477,6 +479,39 @@ function nuevoCiclo(body) {
   }
 
   return guardarMinuta({ turno, casino, fechaInicio, diasMinimosRepeticion: diasMinimosRepeticion || 3, dias });
+}
+
+// ── Metas de balance del menú (JSON en hoja Config, clave metas_balance) ──
+
+function getMetas() {
+  const hoja = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(HOJA_CONFIG);
+  if (!hoja) return null;
+  const row = hoja.getDataRange().getValues().find(r => r[0] === 'metas_balance');
+  if (!row || !row[1]) return null;
+  try { return JSON.parse(row[1]); } catch (e) { return null; }
+}
+
+function guardarMetas(body) {
+  const metas = body.metas;
+  if (!metas || typeof metas !== 'object') throw new Error('Faltan metas');
+  // Solo números finitos y no negativos
+  const limpio = {};
+  Object.keys(metas).forEach(k => {
+    const v = Number(metas[k]);
+    if (isFinite(v) && v >= 0) limpio[k] = v;
+  });
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let hoja = ss.getSheetByName(HOJA_CONFIG);
+  if (!hoja) {
+    hoja = ss.insertSheet(HOJA_CONFIG);
+    hoja.appendRow(['Clave', 'Valor', 'Descripción']);
+  }
+  const rows  = hoja.getDataRange().getValues();
+  const index = rows.findIndex(r => r[0] === 'metas_balance');
+  const fila  = ['metas_balance', JSON.stringify(limpio), 'Metas de balance del menú (editable desde Catálogos → Metas)'];
+  if (index > 0) hoja.getRange(index + 1, 1, 1, 3).setValues([fila]);
+  else hoja.appendRow(fila);
+  return { ok: true };
 }
 
 // ── Inicializar Sheets con estructura y datos base ─────────────

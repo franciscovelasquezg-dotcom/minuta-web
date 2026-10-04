@@ -1,3 +1,5 @@
+import type { MetasBalance } from '@/lib/balance'
+
 // ── Caché en memoria (sesión) ──────────────────────────────────
 const _memCache = new Map<string, { data: unknown; ts: number }>()
 const MEM_TTL = 30_000 // 30 s — segunda línea de defensa tras localStorage
@@ -165,10 +167,12 @@ export const api = {
   getMinuta: (turno: string) => get<MinutaAPI>('minuta', { turno }),
   getHistorial: (turno: string) => get<HistorialEntry[]>('historial', { turno }),
   guardarMinuta: (data: MinutaAPI) => post<{ ok: boolean }>('guardar_minuta', data),
-  nuevoCiclo: (turno: string, fechaInicio: string, casino: string) =>
-    post<{ ok: boolean }>('nuevo_ciclo', { turno, fechaInicio, casino, diasMinimosRepeticion: 3 }),
+  nuevoCiclo: (turno: string, fechaInicio: string, casino: string, diasMinimosRepeticion = 3) =>
+    post<{ ok: boolean }>('nuevo_ciclo', { turno, fechaInicio, casino, diasMinimosRepeticion }),
   guardarPlato: (plato: Partial<Plato>) => post<{ ok: boolean }>('guardar_plato', { plato }),
   eliminarPlato: (id: string) => post<{ ok: boolean }>('eliminar_plato', { id }),
   guardarEnsalada: (ensalada: Partial<Ensalada>) => post<{ ok: boolean }>('guardar_ensalada', { ensalada }),
+  getMetas: () => get<Partial<MetasBalance> | null>('metas'),
+  guardarMetas: (metas: MetasBalance) => post<{ ok: boolean }>('guardar_metas', { metas }),
   guardarAcompañamiento: (acomp: Partial<Acompañamiento>) => post<{ ok: boolean }>('guardar_acomp', { acomp }),
 }

@@ -118,7 +118,7 @@ export default function Home() {
     if (!casino) return
     setCargando(true)
     try {
-      await api.nuevoCiclo(turnoSeleccionado, fecha, casino)
+      await api.nuevoCiclo(turnoSeleccionado, fecha, casino, minuta?.diasMinimosRepeticion || 3)
       const m = await api.getMinuta(turnoSeleccionado)
       setMinuta(m); setDias(m.dias.map(apiToDia))
     } catch (e: unknown) {
@@ -265,6 +265,17 @@ export default function Home() {
             <span className="font-bold text-white text-sm">{formatFecha(minuta?.fechaInicio, 'dd-mm-yyyy')}</span>
             <span className="text-xs" style={{ color: '#475569' }}>Ciclo activo</span>
           </div>
+
+          {/* Separador */}
+          <div className="w-px h-6 shrink-0" style={{ background: '#334155' }} />
+
+          {/* Días mínimos entre platos repetidos */}
+          <label className="flex items-center gap-1.5 shrink-0 text-xs" style={{ color: '#94A3B8' }} title="Un mismo plato principal no debería repetirse antes de estos días. Se guarda con la minuta.">
+            <span className="material-symbols-outlined" style={{ fontSize: 15, color: '#10B981' }}>event_repeat</span>
+            No repetir antes de
+            <input type="number" min={1} max={14} value={minuta?.diasMinimosRepeticion || 3} disabled={!minuta} onChange={e => { const v = Math.min(14, Math.max(1, Number(e.target.value) || 1)); setMinuta(m => m ? { ...m, diasMinimosRepeticion: v } : m); setGuardado(false) }} className="w-12 h-8 rounded-md text-center text-sm font-bold text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 disabled:opacity-50" style={{ background: '#0F172A', border: '1px solid #334155' }} />
+            días
+          </label>
 
           {/* Separador */}
           <div className="w-px h-6 shrink-0" style={{ background: '#334155' }} />

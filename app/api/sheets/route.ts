@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 const APPS_SCRIPT_URL = process.env.NEXT_PUBLIC_APPS_SCRIPT_URL!
 const SECRET = process.env.APPS_SCRIPT_SECRET!
 
-const TIPOS_GET = new Set(['catalogos', 'turnos', 'minuta', 'historial'])
+const TIPOS_GET = new Set(['catalogos', 'turnos', 'minuta', 'historial', 'metas'])
 
 async function hmacToken(): Promise<{ t: string; sig: string }> {
   const t = String(Math.floor(Date.now() / 1000))

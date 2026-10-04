@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { api } from '@/lib/api'
+import { METAS_DEFAULT, MetasBalance, calcularBalance, evaluarDias, EstadoDia, EstadoIndicador } from '@/lib/balance'
 import { DiaMinuta } from '@/types/minuta'
 import { clasificarProteina, PROTEINA_LABEL, TipoProteina } from '@/lib/proteina'
 import { formatFecha } from '@/lib/fecha'
@@ -32,8 +34,31 @@ const PROT_CORTO: Record<TipoProteina, string> = { vacuno: 'VAC', cerdo: 'CER', 
 
 const card = { background: '#131B2E', border: '1px solid #22304A' }
 
+const DIA_ESTILO: Record<EstadoDia, { bg: string; borde: string; texto: string; label: string }> = {
+  ok:         { bg: 'rgba(16,185,129,0.10)', borde: 'rgba(16,185,129,0.35)', texto: '#6EE7B7', label: 'Sin problemas' },
+  limite:     { bg: 'rgba(245,158,11,0.12)', borde: 'rgba(245,158,11,0.55)', texto: '#FCD34D', label: 'Revisar' },
+  conflicto:  { bg: 'rgba(244,63,94,0.15)',  borde: 'rgba(244,63,94,0.75)',  texto: '#FDA4AF', label: 'Corregir' },
+  incompleto: { bg: '#0B1326',               borde: '#334155',               texto: '#94A3B8', label: 'Incompleto' },
+}
+
+const IND_ESTILO: Record<EstadoIndicador, { icon: string; color: string; label: string }> = {
+  ok:    { icon: 'check_circle', color: '#10B981', label: 'Cumple' },
+  cerca: { icon: 'error',        color: '#F59E0B', label: 'Casi' },
+  falla: { icon: 'cancel',       color: '#F43F5E', label: 'No cumple' },
+}
+
 export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinuta[]; diasMinimos: number }) {
   const dias = diasIn.map(d => ({ ...d, fecha: formatFecha(d.fecha) }))
+  const [metas, setMetas] = useState<MetasBalance>(METAS_DEFAULT)
+  const [diaSel, setDiaSel] = useState<number | null>(null)
+
+  useEffect(() => {
+    api.getMetas().then(m => { if (m) setMetas({ ...METAS_DEFAULT, ...m }) }).catch(() => {})
+  }, [])
+
+  const estadosDia = evaluarDias(dias, diasMinimos)
+  const balance = calcularBalance(dias, metas)
+  const metasCumplidas = balance.filter(b => b.estado === 'ok').length
   const platos = contarFrecuencias(dias, 'platoPrincipal')
   const acomps = contarFrecuencias(dias, 'acompañamiento')
   const ensaladas = contarFrecuencias(dias, 'ensalada')
@@ -66,7 +91,7 @@ export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinut
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {[
         { titulo: 'Repeticiones a corregir', valor: String(muySeguidos.length), detalle: muySeguidos.length === 0 ? 'Ningún plato se repite antes del mínimo' : `Platos repetidos antes de ${diasMinimos} días`, color: muySeguidos.length > 0 ? '#F59E0B' : '#10B981', icon: muySeguidos.length > 0 ? 'warning' : 'check_circle' },
-        { titulo: 'Variedad', valor: `${platos.length}`, detalle: `platos distintos en ${conPlato.length} servicios`, color: '#A78BFA', icon: 'restaurant_menu' },
+        { titulo: 'Balance del menú', valor: `${metasCumplidas}/${balance.length}`, detalle: metasCumplidas === balance.length ? 'Cumple todas las metas' : 'metas cumplidas', color: metasCumplidas === balance.length ? '#10B981' : '#F59E0B', icon: 'balance' },
         { titulo: 'Confirmados', valor: `${pctConfirmados}%`, detalle: `${confirmados} de ${totalServicios}${enRevision ? ` · ${enRevision} en revisión` : ''}`, color: '#10B981', icon: 'task_alt' },
         { titulo: 'Sin plato definido', valor: String(sinDefinir), detalle: sinDefinir === 0 ? 'Todos los servicios tienen plato' : 'servicios por completar', color: sinDefinir > 0 ? '#F59E0B' : '#64748B', icon: 'edit_note' },
       ].map(k => (
@@ -80,7 +105,52 @@ export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinut
       ))}
     </div>
 
-    {/* 2. Qué revisar */}
+    {/* 2. Estado por día */}
+    <section className="rounded-xl overflow-hidden" style={card}>
+      <header className="px-4 py-3 flex flex-wrap items-center justify-between gap-2" style={{ borderBottom: '1px solid #22304A' }}>
+        <h2 className="text-base font-bold text-white">Estado por día</h2>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+          {(['ok', 'limite', 'conflicto', 'incompleto'] as EstadoDia[]).map(e => (
+            <span key={e} className="flex items-center gap-1.5" style={{ color: '#94A3B8' }}>
+              <span className="w-2.5 h-2.5 rounded-sm" style={{ background: DIA_ESTILO[e].borde }} />{DIA_ESTILO[e].label}
+            </span>
+          ))}
+        </div>
+      </header>
+      <div className="p-4">
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+          {dias.map((d, di) => {
+            const est = DIA_ESTILO[estadosDia[di].estado]
+            const sel = diaSel === di
+            return (
+              <button key={di} type="button" onClick={() => setDiaSel(sel ? null : di)} title={estadosDia[di].motivos.join('\n') || 'Sin problemas'} className="min-h-[56px] rounded-lg flex flex-col items-center justify-center text-center transition-all" style={{ background: est.bg, border: `${sel ? 2 : 1}px solid ${est.borde}`, boxShadow: sel ? `0 0 0 2px ${est.borde}` : 'none' }}>
+                <span className="text-[10px] sm:text-[11px]" style={{ color: d.diaSemana === 'Domingo' ? '#FB923C' : '#94A3B8' }}>{d.diaSemana.slice(0, 3)}</span>
+                <span className="text-sm font-extrabold" style={{ color: est.texto }}>D{d.dia}</span>
+                <span className="text-[10px]" style={{ color: '#64748B' }}>{d.fecha}</span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="mt-3 rounded-lg px-3 py-2.5 text-sm" style={{ background: '#0B1326', border: '1px solid #22304A' }}>
+          {diaSel === null || !dias[diaSel] ? (
+            <span style={{ color: '#64748B' }}>Toca un día para ver el detalle.</span>
+          ) : (
+            <>
+              <div className="font-semibold text-white">Día {dias[diaSel].dia} · {dias[diaSel].diaSemana} {dias[diaSel].fecha}</div>
+              {estadosDia[diaSel].motivos.length === 0 ? (
+                <div className="text-xs mt-1" style={{ color: '#6EE7B7' }}>Sin problemas.</div>
+              ) : (
+                <ul className="mt-1 space-y-0.5">
+                  {estadosDia[diaSel].motivos.map((m, i) => <li key={i} className="text-xs" style={{ color: '#CBD5E1' }}>• {m}</li>)}
+                </ul>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </section>
+
+    {/* 3. Qué revisar */}
     <section className="rounded-xl overflow-hidden" style={card}>
       <header className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid #22304A' }}>
         <span className="material-symbols-outlined" style={{ fontSize: 20, color: aRevisar.length ? '#F59E0B' : '#10B981' }}>{aRevisar.length ? 'priority_high' : 'verified'}</span>
@@ -119,7 +189,47 @@ export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinut
       )}
     </section>
 
-    {/* 3. Calendario de proteínas */}
+    {/* 4. Balance del menú */}
+    <section className="rounded-xl overflow-hidden" style={card}>
+      <header className="px-4 py-3 flex flex-wrap items-center justify-between gap-2" style={{ borderBottom: '1px solid #22304A' }}>
+        <h2 className="text-base font-bold text-white">Balance del menú</h2>
+        <span className="text-xs" style={{ color: '#64748B' }}>Metas editables en Catálogos → Metas del menú</span>
+      </header>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-[11px] uppercase tracking-wider" style={{ color: '#64748B' }}>
+              <th className="px-4 py-2 font-semibold">Indicador</th>
+              <th className="px-3 py-2 font-semibold">Meta</th>
+              <th className="px-3 py-2 font-semibold">Este ciclo</th>
+              <th className="px-4 py-2 font-semibold">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {balance.map(b => {
+              const e = IND_ESTILO[b.estado]
+              return (
+                <tr key={b.label} style={{ borderTop: '1px solid #1B263E' }}>
+                  <td className="px-4 py-2.5">
+                    <div className="text-white font-medium">{b.label}</div>
+                    {b.detalle && <div className="text-xs" style={{ color: '#64748B' }}>{b.detalle}</div>}
+                  </td>
+                  <td className="px-3 py-2.5 whitespace-nowrap" style={{ color: '#94A3B8' }}>{b.meta}</td>
+                  <td className="px-3 py-2.5 whitespace-nowrap font-bold" style={{ color: e.color }}>{b.actual}</td>
+                  <td className="px-4 py-2.5 whitespace-nowrap">
+                    <span className="inline-flex items-center gap-1 text-xs font-bold" style={{ color: e.color }}>
+                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>{e.icon}</span>{e.label}
+                    </span>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    {/* 5. Calendario de proteínas */}
     <section className="rounded-xl overflow-hidden" style={card}>
       <header className="px-4 py-3 flex flex-wrap items-center justify-between gap-2" style={{ borderBottom: '1px solid #22304A' }}>
         <h2 className="text-base font-bold text-white">Proteína de cada servicio</h2>
@@ -184,7 +294,7 @@ export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinut
       </div>
     </section>
 
-    {/* 4. Frecuencias */}
+    {/* 6. Frecuencias */}
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
       <ListaFrecuencia titulo="Platos principales" items={platos} color="#F59E0B" marcados={nombresConflicto} />
       <ListaFrecuencia titulo="Acompañamientos" items={acomps} color="#22D3EE" />

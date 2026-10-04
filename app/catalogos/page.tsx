@@ -5,7 +5,10 @@ import { api, Plato, Ensalada, Acompañamiento, Turno } from '@/lib/api'
 import AppHeader from '@/components/AppHeader'
 import { POSTRES } from '@/data/catalogos'
 
-type Tab = 'platos' | 'ensaladas' | 'acompañamientos' | 'turnos' | 'postres'
+import MetasEditor from '@/components/MetasEditor'
+import { METAS_INFO } from '@/lib/balance'
+
+type Tab = 'platos' | 'ensaladas' | 'acompañamientos' | 'turnos' | 'postres' | 'metas'
 
 const TIPOS_PLATO = ['vacuno', 'cerdo', 'pollo', 'pasta', 'legumbre', 'otro']
 const TIPOS_ENSALADA = ['hojas verdes', 'raíz', 'fresca', 'cocida', 'típica chilena', 'crucífera', 'coles', 'grano', 'legumbre', 'tubérculo', 'crocante', 'otro']
@@ -144,6 +147,7 @@ export default function CatalogosPage() {
     { id: 'ensaladas', label: 'Ensaladas', icon: 'nutrition', count: ensaladas.length },
     { id: 'turnos', label: 'Turnos y Jornadas', icon: 'schedule', count: turnos.length || 4 },
     { id: 'postres', label: 'Postres y Opciones Saludables', icon: 'icecream', count: POSTRES.length },
+    { id: 'metas', label: 'Metas del menú', icon: 'balance', count: METAS_INFO.length },
   ]
 
   const proteinaPills = [
@@ -522,6 +526,9 @@ export default function CatalogosPage() {
                   </div>
                 </div>
               )}
+
+              {/* METAS DEL MENÚ */}
+              {tab === 'metas' && <MetasEditor />}
             </div>
           )}
 
