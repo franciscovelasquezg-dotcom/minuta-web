@@ -121,9 +121,21 @@ export default function CatalogosPage() {
     api.getCatalogos().then(c => { setPlatos(c.platos); setEnsaladas(c.ensaladas); setAcomps(c.acompañamientos); setTurnos(c.turnos) }).finally(() => setCargando(false))
   }, [])
 
-  const savePlato = async (p: Partial<Plato>) => { setGuardando(true); await api.guardarPlato(p); const c = await api.getCatalogos(); setPlatos(c.platos); setModalPlato(false); setGuardando(false) }
-  const saveEnsalada = async (e: Partial<Ensalada>) => { setGuardando(true); await api.guardarEnsalada(e); const c = await api.getCatalogos(); setEnsaladas(c.ensaladas); setModalEnsalada(false); setGuardando(false) }
-  const saveAcomp = async (a: Partial<Acompañamiento>) => { setGuardando(true); await api.guardarAcompañamiento(a); const c = await api.getCatalogos(); setAcomps(c.acompañamientos); setModalAcomp(false); setGuardando(false) }
+  const conGuardado = async (fn: () => Promise<void>) => {
+    setGuardando(true)
+    try { await fn() } catch (e) { alert(`No se pudo guardar: ${e instanceof Error ? e.message : e}`) } finally { setGuardando(false) }
+  }
+  const savePlato = (p: Partial<Plato>) => conGuardado(async () => { await api.guardarPlato(p); const c = await api.getCatalogos(); setPlatos(c.platos); setModalPlato(false) })
+  const saveEnsalada = (e: Partial<Ensalada>) => conGuardado(async () => { await api.guardarEnsalada(e); const c = await api.getCatalogos(); setEnsaladas(c.ensaladas); setModalEnsalada(false) })
+  const saveAcomp = (a: Partial<Acompañamiento>) => conGuardado(async () => { await api.guardarAcompañamiento(a); const c = await api.getCatalogos(); setAcomps(c.acompañamientos); setModalAcomp(false) })
+  const toggleActivoPlato = async (p: Plato) => {
+    const nuevo = !p.activo
+    setPlatos(ps => ps.map(x => x.id === p.id ? { ...x, activo: nuevo } : x))
+    try { await api.guardarPlato({ ...p, activo: nuevo }) } catch (e) {
+      setPlatos(ps => ps.map(x => x.id === p.id ? { ...x, activo: p.activo } : x))
+      alert(`No se pudo cambiar el estado: ${e instanceof Error ? e.message : e}`)
+    }
+  }
   const deletePlato = async (id: string) => { if (!confirm('¿Eliminar este plato?')) return; await api.eliminarPlato(id); setPlatos(p => p.filter(x => x.id !== id)) }
 
   const tabDefs: { id: Tab; label: string; icon: string; count: number }[] = [
@@ -324,9 +336,9 @@ export default function CatalogosPage() {
                               <p className="text-[12px] text-slate-400 leading-relaxed line-clamp-2">{p.receta || '—'}</p>
                             </td>
                             <td className="py-3 px-3 align-top border-t border-[#334155] text-center">
-                              <div className={`relative inline-flex h-6 w-11 rounded-full cursor-pointer transition-colors ${p.activo ? 'bg-emerald-500' : 'bg-slate-600'}`} style={{ outline: p.activo ? '1px solid rgba(52,211,153,0.40)' : 'none' }}>
+                              <button type="button" role="switch" aria-checked={p.activo} onClick={() => toggleActivoPlato(p)} title={p.activo ? 'Desactivar' : 'Activar'} className={`relative inline-flex h-6 w-11 rounded-full cursor-pointer transition-colors ${p.activo ? 'bg-emerald-500' : 'bg-slate-600'}`} style={{ outline: p.activo ? '1px solid rgba(52,211,153,0.40)' : 'none' }}>
                                 <span className={`inline-block h-4 w-4 transform rounded-full bg-white mt-1 shadow-sm transition-transform ${p.activo ? 'translate-x-6 ml-0.5' : 'translate-x-1'}`}></span>
-                              </div>
+                              </button>
                               <span className={`block text-[10px] font-bold uppercase tracking-wider mt-0.5 ${p.activo ? 'text-emerald-400' : 'text-slate-400'}`}>{p.activo ? 'Activo' : 'Inactivo'}</span>
                             </td>
                             <td className="py-3 px-5 align-top border-t border-[#334155] text-right">

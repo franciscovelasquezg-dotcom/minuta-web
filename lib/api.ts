@@ -83,6 +83,8 @@ async function post<T>(accion: string, body: object): Promise<T> {
   })
   const json = await res.json()
   if (!json.ok) throw new Error(json.error)
+  // Toda escritura deja obsoletas las lecturas cacheadas (memoria 30 s + localStorage 30 min)
+  invalidarCache()
   return json.data
 }
 
