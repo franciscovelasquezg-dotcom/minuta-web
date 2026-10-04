@@ -86,6 +86,8 @@ export default function Home() {
   }, [turnoSeleccionado])
 
   const alertas = detectarRepeticiones(dias, minuta?.diasMinimosRepeticion || 3)
+  // El aviso cuenta platos distintos que incumplen el mínimo (no servicios, ni los 'cercano' que sí cumplen)
+  const platosConflicto = new Set(Array.from(alertas).filter(([, nivel]) => nivel === 'repetido').map(([key]) => { const [di, si] = key.split('-').map(Number); return dias[di]?.servicios[si]?.platoPrincipal }))
 
   const handleChange = useCallback((diaIndex: number, svcIndex: number, campo: keyof Servicio, valor: string) => {
     setGuardado(false)
@@ -347,7 +349,7 @@ export default function Home() {
         ) : (
           <>
             {/* Alert banner */}
-            {alertas.size > 0 && !alertaDismissed && (
+            {platosConflicto.size > 0 && !alertaDismissed && (
               <section className="mb-5 rounded-xl p-4 shadow-lg" style={{ background: '#291E0A', border: '1px solid #D97706' }}>
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
                   <div className="flex items-start md:items-center gap-3">
@@ -359,11 +361,11 @@ export default function Home() {
                       <div className="flex items-center gap-2">
                         <span className="font-bold text-amber-200" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 14 }}>Alerta de Variedad Detectada</span>
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase" style={{ background: 'rgba(120,53,15,0.8)', border: '1px solid rgba(217,119,6,0.6)', color: '#FCD34D' }}>
-                          {alertas.size} conflicto{alertas.size > 1 ? 's' : ''}
+                          {platosConflicto.size} plato{platosConflicto.size > 1 ? 's' : ''} repetido{platosConflicto.size > 1 ? 's' : ''}
                         </span>
                       </div>
                       <p className="text-sm mt-0.5" style={{ color: 'rgba(254,243,199,0.9)' }}>
-                        Se detectaron repeticiones con intervalo inferior al mínimo ({minuta?.diasMinimosRepeticion || 3} días). Revisa las tarjetas marcadas en amber.
+                        Se detectaron repeticiones con intervalo inferior al mínimo ({minuta?.diasMinimosRepeticion || 3} días). Detalle en la vista Análisis.
                       </p>
                     </div>
                   </div>
