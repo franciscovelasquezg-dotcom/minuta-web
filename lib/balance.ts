@@ -1,5 +1,6 @@
 import { DiaMinuta } from '@/types/minuta'
 import { clasificarProteina, PROTEINA_LABEL } from '@/lib/proteina'
+import type { ParParecido } from '@/lib/similitud'
 
 // Metas de balance del menú. Valores por defecto = propuesta inicial (ajustables en Catálogos → Metas).
 // Base: guías alimentarias MINSAL (legumbres 2×/semana, pescado ≥1×/semana) adaptadas a casino de faena.
@@ -11,6 +12,7 @@ export interface MetasBalance {
   pastaMaxPct: number         // pasta como plato principal, % de servicios
   variedadMinPct: number      // platos distintos / servicios
   mismaProteinaDiaMaxSemana: number // días con la misma proteína en almuerzo y cena, por semana
+  parecidosMaxSemana: number  // pares de platos parecidos servidos antes del mínimo de días, por semana
 }
 
 export const METAS_DEFAULT: MetasBalance = {
@@ -21,6 +23,7 @@ export const METAS_DEFAULT: MetasBalance = {
   pastaMaxPct: 15,
   variedadMinPct: 60,
   mismaProteinaDiaMaxSemana: 1,
+  parecidosMaxSemana: 1,
 }
 
 export const METAS_INFO: { key: keyof MetasBalance; label: string; unidad: string; tipo: 'max' | 'min' }[] = [
@@ -31,6 +34,7 @@ export const METAS_INFO: { key: keyof MetasBalance; label: string; unidad: strin
   { key: 'pastaMaxPct', label: 'Pasta como plato principal', unidad: '% máx.', tipo: 'max' },
   { key: 'variedadMinPct', label: 'Variedad (platos distintos)', unidad: '% mín.', tipo: 'min' },
   { key: 'mismaProteinaDiaMaxSemana', label: 'Misma proteína en almuerzo y cena', unidad: 'días máx. por semana', tipo: 'max' },
+  { key: 'parecidosMaxSemana', label: 'Platos parecidos muy seguidos', unidad: 'pares máx. por semana', tipo: 'max' },
 ]
 
 export type EstadoIndicador = 'ok' | 'cerca' | 'falla'
@@ -52,7 +56,7 @@ function evaluar(actual: number, meta: number, tipo: 'max' | 'min', margen: numb
   return Math.abs(actual - meta) <= margen ? 'cerca' : 'falla'
 }
 
-export function calcularBalance(dias: DiaMinuta[], metas: MetasBalance): Indicador[] {
+export function calcularBalance(dias: DiaMinuta[], metas: MetasBalance, parecidos: ParParecido[] = []): Indicador[] {
   const servicios = dias.flatMap(d => d.servicios).filter(s => definido(s.platoPrincipal))
   const n = servicios.length
   if (n === 0) return []
@@ -80,6 +84,7 @@ export function calcularBalance(dias: DiaMinuta[], metas: MetasBalance): Indicad
     { label: 'Pasta como plato principal', meta: `máx. ${metas.pastaMaxPct}%`, actual: `${pct(pasta)}%`, estado: evaluar(pct(pasta), metas.pastaMaxPct, 'max', 5), detalle: `${pasta} de ${n} servicios` },
     { label: 'Variedad (platos distintos)', meta: `mín. ${metas.variedadMinPct}%`, actual: `${pct(distintos)}%`, estado: evaluar(pct(distintos), metas.variedadMinPct, 'min', 5), detalle: `${distintos} platos distintos en ${n} servicios` },
     { label: 'Misma proteína en almuerzo y cena', meta: `máx. ${metas.mismaProteinaDiaMaxSemana} día por semana`, actual: `${r1(diasMismaProt.length / semanas)} por semana`, estado: evaluar(diasMismaProt.length / semanas, metas.mismaProteinaDiaMaxSemana, 'max', 0.5), detalle: diasMismaProt.length ? `Días: ${diasMismaProt.map(d => d.dia).join(', ')}` : 'Ningún día' },
+    { label: 'Platos parecidos muy seguidos', meta: `máx. ${metas.parecidosMaxSemana} por semana`, actual: `${r1(parecidos.length / semanas)} por semana`, estado: evaluar(parecidos.length / semanas, metas.parecidosMaxSemana, 'max', 0.5), detalle: parecidos.length ? `${parecidos.length} par${parecidos.length > 1 ? 'es' : ''} en ${dias.length} días` : 'Ninguno' },
   ]
 }
 
@@ -88,7 +93,7 @@ export type EstadoDia = 'ok' | 'limite' | 'conflicto' | 'incompleto'
 
 export interface DiaEvaluado { estado: EstadoDia; motivos: string[] }
 
-export function evaluarDias(dias: DiaMinuta[], diasMinimos: number): DiaEvaluado[] {
+export function evaluarDias(dias: DiaMinuta[], diasMinimos: number, parecidos: ParParecido[] = []): DiaEvaluado[] {
   // Posiciones (índice de día) de cada plato principal
   const pos = new Map<string, number[]>()
   dias.forEach((d, di) => d.servicios.forEach(s => {
@@ -121,6 +126,12 @@ export function evaluarDias(dias: DiaMinuta[], diasMinimos: number): DiaEvaluado
       nivel = Math.max(nivel, 1)
       motivos.push(`Almuerzo y cena con la misma proteína (${PROTEINA_LABEL[prots[0]]})`)
     }
+    parecidos.forEach(p => {
+      const [yo, otro] = p.a.di === di ? [p.a, p.b] : p.b.di === di ? [p.b, p.a] : [null, null]
+      if (!yo || !otro) return
+      nivel = Math.max(nivel, 1)
+      motivos.push(`${yo.tipo}: "${yo.plato}" se parece a "${otro.plato}" (${otro.di === di ? 'mismo día' : `día ${dias[otro.di]?.dia ?? otro.di + 1}`}) — ${p.detalle}`)
+    })
     const faltan = d.servicios.filter(s => !definido(s.platoPrincipal)).length
     if (faltan > 0) motivos.push(`${faltan} servicio${faltan > 1 ? 's' : ''} sin plato definido`)
     const estado: EstadoDia = nivel === 2 ? 'conflicto' : nivel === 1 ? 'limite' : faltan > 0 ? 'incompleto' : 'ok'

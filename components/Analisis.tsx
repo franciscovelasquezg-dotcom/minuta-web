@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
+import { detectarParecidos, ServicioRef } from '@/lib/similitud'
 import { METAS_DEFAULT, MetasBalance, calcularBalance, evaluarDias, EstadoDia, EstadoIndicador } from '@/lib/balance'
 import { DiaMinuta } from '@/types/minuta'
 import { clasificarProteina, PROTEINA_LABEL, TipoProteina } from '@/lib/proteina'
@@ -51,13 +52,16 @@ export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinut
   const dias = diasIn.map(d => ({ ...d, fecha: formatFecha(d.fecha) }))
   const [metas, setMetas] = useState<MetasBalance>(METAS_DEFAULT)
   const [diaSel, setDiaSel] = useState<number | null>(null)
+  const [familias, setFamilias] = useState<Map<string, string>>(new Map())
 
   useEffect(() => {
     api.getMetas().then(m => { if (m) setMetas({ ...METAS_DEFAULT, ...m }) }).catch(() => {})
+    api.getCatalogos().then(c => setFamilias(new Map(c.platos.filter(p => p.familia).map(p => [p.nombre, p.familia as string])))).catch(() => {})
   }, [])
 
-  const estadosDia = evaluarDias(dias, diasMinimos)
-  const balance = calcularBalance(dias, metas)
+  const parecidos = detectarParecidos(dias, diasMinimos, familias)
+  const estadosDia = evaluarDias(dias, diasMinimos, parecidos)
+  const balance = calcularBalance(dias, metas, parecidos)
   const metasCumplidas = balance.filter(b => b.estado === 'ok').length
   const platos = contarFrecuencias(dias, 'platoPrincipal')
   const acomps = contarFrecuencias(dias, 'acompañamiento')
@@ -84,6 +88,8 @@ export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinut
 
   const tiposServicio = Array.from(new Set(servicios.map(s => s.tipo)))
   const etiquetaDia = (a: Aparicion) => `Día ${dias[a.di]?.dia ?? a.di + 1} · ${dias[a.di]?.fecha ?? ''} · ${a.tipo}`
+  const etiquetaRef = (r: ServicioRef) => etiquetaDia({ di: r.di, tipo: r.tipo })
+  const hayQueRevisar = aRevisar.length + parecidos.length > 0
 
   return (
     <div className="flex flex-col gap-5">
@@ -153,11 +159,11 @@ export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinut
     {/* 3. Qué revisar */}
     <section className="rounded-xl overflow-hidden" style={card}>
       <header className="px-4 py-3 flex items-center gap-2" style={{ borderBottom: '1px solid #22304A' }}>
-        <span className="material-symbols-outlined" style={{ fontSize: 20, color: aRevisar.length ? '#F59E0B' : '#10B981' }}>{aRevisar.length ? 'priority_high' : 'verified'}</span>
+        <span className="material-symbols-outlined" style={{ fontSize: 20, color: hayQueRevisar ? '#F59E0B' : '#10B981' }}>{hayQueRevisar ? 'priority_high' : 'verified'}</span>
         <h2 className="text-base font-bold text-white">Qué revisar</h2>
       </header>
-      {aRevisar.length === 0 ? (
-        <p className="px-4 py-5 text-sm" style={{ color: '#94A3B8' }}>Todo en orden: ningún plato principal se repite con menos de {diasMinimos + 2} días de separación.</p>
+      {!hayQueRevisar ? (
+        <p className="px-4 py-5 text-sm" style={{ color: '#94A3B8' }}>Todo en orden: ningún plato principal se repite con menos de {diasMinimos + 2} días de separación y no hay platos parecidos muy seguidos.</p>
       ) : (
         <ul>
           {aRevisar.map(p => {
@@ -180,11 +186,27 @@ export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinut
               </li>
             )
           })}
+          {parecidos.map(p => (
+            <li key={`${p.a.plato}||${p.b.plato}`} className="px-4 py-3 flex flex-col md:flex-row md:items-center gap-2 md:gap-4" style={{ borderTop: '1px solid #1B263E' }}>
+              <span className="shrink-0 w-fit px-2 py-0.5 rounded text-[11px] font-bold" style={{ background: 'rgba(167,139,250,0.15)', color: '#C4B5FD', border: '1px solid rgba(167,139,250,0.45)' }}>
+                Parecidos
+              </span>
+              <div className="min-w-0 md:w-72 shrink-0">
+                <div className="text-sm font-semibold text-white">{p.a.plato} <span style={{ color: '#64748B' }}>↔</span> {p.b.plato}</div>
+                <div className="text-xs" style={{ color: '#C4B5FD' }}>{p.detalle} · separación {p.distancia} {p.distancia === 1 ? 'día' : 'días'}</div>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {[p.a, p.b].map((r, i) => (
+                  <span key={i} className="px-2 py-1 rounded text-xs" style={{ background: '#0B1326', border: '1px solid #22304A', color: '#CBD5E1' }}>{etiquetaRef(r)}</span>
+                ))}
+              </div>
+            </li>
+          ))}
         </ul>
       )}
-      {aRevisar.length > 0 && (
+      {hayQueRevisar && (
         <p className="px-4 py-2.5 text-xs" style={{ color: '#64748B', borderTop: '1px solid #1B263E' }}>
-          <strong style={{ color: '#FCD34D' }}>Muy seguido</strong>: menos de {diasMinimos} días entre una vez y otra. <strong style={{ color: '#FCD34D' }}>Justo en el límite</strong>: {diasMinimos} o {diasMinimos + 1} días; cumple, pero conviene espaciarlo. Corrígelo en el Planificador cambiando uno de los dos platos.
+          <strong style={{ color: '#FCD34D' }}>Muy seguido</strong>: el mismo plato a menos de {diasMinimos} días. <strong style={{ color: '#FCD34D' }}>Justo en el límite</strong>: {diasMinimos} o {diasMinimos + 1} días; cumple, pero conviene espaciarlo. <strong style={{ color: '#C4B5FD' }}>Parecidos</strong>: platos distintos con la misma preparación, salsa o familia a menos de {diasMinimos} días. Corrígelo en el Planificador cambiando uno de los dos platos; si un parecido no lo es, asígnales familias distintas en Catálogos.
         </p>
       )}
     </section>

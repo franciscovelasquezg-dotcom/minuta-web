@@ -92,6 +92,7 @@ function getPlatos(ss) {
       acompañamientosRecomendados: r[3] ? String(r[3]).split(',').map(s => s.trim()) : [],
       receta:       r[4] || '',
       activo:       r[5] !== false && r[5] !== 'false' && r[5] !== 0,
+      familia:      r[6] ? String(r[6]).trim() : '',
     }));
 }
 
@@ -375,14 +376,17 @@ function guardarPlato(body) {
   let hoja   = ss.getSheetByName(HOJA_PLATOS);
   if (!hoja) {
     hoja = ss.insertSheet(HOJA_PLATOS);
-    hoja.appendRow(['ID', 'Nombre', 'Tipo', 'Acompañamientos Recomendados', 'Receta', 'Activo']);
+    hoja.appendRow(['ID', 'Nombre', 'Tipo', 'Acompañamientos Recomendados', 'Receta', 'Activo', 'Familia']);
   }
 
-  const { id, nombre, tipo, acompañamientosRecomendados, receta, activo } = body.plato;
+  const { id, nombre, tipo, acompañamientosRecomendados, receta, activo, familia } = body.plato;
   const rows  = hoja.getDataRange().getValues();
   const index = rows.findIndex(r => r[0] === id);
 
-  const fila = [id || Utilities.getUuid(), nombre, tipo, (acompañamientosRecomendados || []).join(', '), receta || '', activo !== false];
+  // Hojas creadas antes de la columna Familia: agregar el encabezado
+  if (hoja.getRange(1, 7).getValue() === '') hoja.getRange(1, 7).setValue('Familia');
+
+  const fila = [id || Utilities.getUuid(), nombre, tipo, (acompañamientosRecomendados || []).join(', '), receta || '', activo !== false, familia ? String(familia).trim() : ''];
 
   if (index > 0) {
     hoja.getRange(index + 1, 1, 1, fila.length).setValues([fila]);
@@ -566,7 +570,7 @@ function _crearHojaPlatos(ss) {
   let h = ss.getSheetByName(HOJA_PLATOS);
   if (h) ss.deleteSheet(h);
   h = ss.insertSheet(HOJA_PLATOS);
-  h.appendRow(['ID', 'Nombre', 'Tipo', 'Acompañamientos Recomendados', 'Receta', 'Activo']);
+  h.appendRow(['ID', 'Nombre', 'Tipo', 'Acompañamientos Recomendados', 'Receta', 'Activo', 'Familia']);
   const platos = [
     ['p1',  'ASADO TRADICIONAL A LAS BRASAS',           'vacuno',   'Parrilla / Carbón',                                    'Asado a las brasas, corte tradicional de faena',    true],
     ['p2',  'Albóndigas en salsa Pomodoro',             'vacuno',   'Salsa Pomodoro,Pasta,Puré Florentina',                  '',                                                  true],

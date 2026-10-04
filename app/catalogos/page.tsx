@@ -43,6 +43,10 @@ function ModalPlato({ plato, onSave, onClose }: { plato: Partial<Plato> | null; 
             </select>
           </div>
           <div>
+            <label className={dkLabel}>Familia <span className="text-slate-500 font-normal normal-case">(opcional — platos con la misma familia se consideran parecidos)</span></label>
+            <input value={form.familia || ''} onChange={e => set('familia', e.target.value)} placeholder="Ej: Chopsui, Bolognesa, Salteado peruano..." className={dkInput} />
+          </div>
+          <div>
             <label className={dkLabel}>Acompañamientos recomendados <span className="text-slate-500 font-normal normal-case">(separados por coma)</span></label>
             <input value={acompInput} onChange={e => { setAcompInput(e.target.value); set('acompañamientosRecomendados', e.target.value.split(',').map(s => s.trim()).filter(Boolean)) }} placeholder="Arroz blanco, Puré de Papas..." className={dkInput} />
           </div>
@@ -319,7 +323,7 @@ export default function CatalogosPage() {
                                 <div className={`w-1.5 h-10 rounded-full shrink-0 mt-0.5 ${PROT_BAR[p.tipo] || PROT_BAR.outro}`}></div>
                                 <div className="flex flex-col">
                                   <span className="text-[16px] font-semibold text-white group-hover:text-emerald-400 transition-colors leading-tight">{p.nombre}</span>
-                                  <span className="text-slate-400 text-[11px] mt-0.5">Tipo: {p.tipo}</span>
+                                  <span className="text-slate-400 text-[11px] mt-0.5">Tipo: {p.tipo}{p.familia ? ` · Familia: ${p.familia}` : ''}</span>
                                 </div>
                               </div>
                             </td>

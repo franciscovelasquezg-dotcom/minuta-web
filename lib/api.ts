@@ -97,6 +97,7 @@ export interface Plato {
   acompañamientosRecomendados: string[]
   receta: string
   activo: boolean
+  familia?: string
 }
 
 export interface Ensalada {
