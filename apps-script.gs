@@ -173,7 +173,7 @@ function getMinuta(turno) {
   if (!turno) throw new Error('Falta parámetro turno');
 
   const cache    = CacheService.getScriptCache();
-  const cacheKey = 'minuta_' + turno;
+  const cacheKey = 'minuta_v2_' + turno;
   const cached   = cache.get(cacheKey);
   if (cached) return JSON.parse(cached);
 
@@ -189,7 +189,8 @@ function getMinuta(turno) {
   let diaActual = null;
   for (let i = 2; i < rows.length; i++) {
     const r = rows[i];
-    if (!r[0] && !r[1]) continue;
+    // Las filas de Cena llevan Dia/Fecha vacíos (solo la 1ª fila del día los tiene): no saltarlas
+    if (!r[0] && !r[3]) continue;
 
     if (r[0]) {
       // Nueva fila de día
@@ -228,7 +229,7 @@ function getMinuta(turno) {
 }
 
 function _invalidarCacheMinuta(turno) {
-  CacheService.getScriptCache().remove('minuta_' + turno);
+  CacheService.getScriptCache().remove('minuta_v2_' + turno);
 }
 
 // ── POST: Guardar minuta completa ──────────────────────────────
