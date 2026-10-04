@@ -76,9 +76,11 @@ export default function ServicioCard({ servicio, alerta, onChange, opcionesPlato
             <label className="font-bold uppercase tracking-wider text-slate-400" style={{ fontSize: 9 }}>
               Plato Principal {alerta && <span className="text-amber-400">• Conflicto</span>}
             </label>
-            <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold ${prot.cls}`}>
-              {prot.label}
-            </span>
+            {servicio.platoPrincipal && servicio.platoPrincipal !== 'Por Definir' && (
+              <span className={`px-1.5 py-0.5 rounded border text-[9px] font-bold ${prot.cls}`}>
+                {prot.label}
+              </span>
+            )}
           </div>
           <SelectField
             value={servicio.platoPrincipal}
