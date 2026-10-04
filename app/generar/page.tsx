@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { api, Catalogos, Turno, MinutaAPI, guardarMinutaControlada, FUENTE_LABEL } from '@/lib/api'
 import { generarMinuta, OpcionesGeneracion } from '@/lib/generador'
 import { aFechaISO, formatFecha } from '@/lib/fecha'
+import { METAS_DEFAULT, MetasBalance } from '@/lib/balance'
 import { DiaMinuta, Servicio } from '@/types/minuta'
 import { detectarRepeticiones } from '@/lib/repeticion'
 import DiaCard from '@/components/DiaCard'
@@ -42,11 +43,14 @@ export default function GenerarPage() {
   const [filtroTabla, setFiltroTabla] = useState('')
   // Minuta que hoy está guardada para el turno (la que ven Planificador y Análisis)
   const [actual, setActual] = useState<MinutaAPI | null>(null)
+  // Metas de balance (Catálogos → Metas): guían la proporción de proteínas del generador
+  const [metas, setMetas] = useState<MetasBalance>(METAS_DEFAULT)
   const router = useRouter()
 
   useEffect(() => {
     // Turno pedido desde el Planificador o el Análisis (?turno=14x14)
     const t = new URLSearchParams(window.location.search).get('turno')
+    api.getMetas().then(m => { if (m) setMetas({ ...METAS_DEFAULT, ...m }) }).catch(() => {})
     api.getCatalogos()
       .then(c => { setCatalogos(c); if (t && c.turnos.some(x => x.codigo === t)) setTurnoSel(t) })
       .finally(() => setCargando(false))
@@ -94,7 +98,7 @@ export default function GenerarPage() {
         turnoActual,
         fechaInicio,
         casino,
-        { gapMin: gapDias, fijos }
+        { gapMin: gapDias, fijos, metas }
       )
       setDias(resultado)
       setGenerando(false)

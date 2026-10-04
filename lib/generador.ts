@@ -2,17 +2,19 @@ import { Plato, Ensalada, Acompañamiento, Turno } from './api'
 import { POSTRES } from '@/data/catalogos'
 import { clasificarProteina } from './proteina'
 import { DiaMinuta, Servicio } from '@/types/minuta'
+import { METAS_DEFAULT, MetasBalance } from './balance'
 
 const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
 
-// Cuántos servicios de cada tipo queremos por ciclo (proporciones ideales)
-const PROPORCION_IDEAL: Record<string, number> = {
-  vacuno:   0.30,
-  cerdo:    0.20,
-  pollo:    0.25,
-  pasta:    0.15,
-  legumbre: 0.10,
-  otro:     0.00,
+// Proporción ideal de cada proteína, derivada de las metas de Balance del menú (Catálogos → Metas).
+// Legumbres y pescado se piden "por semana" → se pasan a fracción de servicios (2 servicios por día).
+export function proporcionIdeal(metas: MetasBalance): Record<string, number> {
+  const legumbre = Math.min(0.3, metas.legumbreMinSemana / 14)
+  const pescado = Math.min(0.2, metas.pescadoMinSemana / 14)
+  const pollo = Math.max(0.2, metas.polloMinPct / 100)
+  const pasta = Math.min(0.15, (metas.pastaMaxPct / 100) * 0.8)
+  const rojas = Math.max(0, Math.min((metas.carnesRojasMaxPct / 100) * 0.9, 1 - legumbre - pescado - pollo - pasta))
+  return { vacuno: rojas * 0.6, cerdo: rojas * 0.4, pollo, pasta, legumbre, pescado, vegetariano: 0, otro: 0 }
 }
 
 // Shuffle determinístico con seed (para resultados reproducibles)
@@ -35,6 +37,8 @@ interface SlotContext {
   usadosEnsaladas: Set<string>
   usadosAcompsRecientes: string[]       // últimos 3 acompañamientos
   conteoTipos: Record<string, number>   // cuántos de cada tipo ya asignados
+  proteinaOtroServicio?: string          // proteína del otro servicio del mismo día (evitar repetirla)
+  ideal: Record<string, number>
 }
 
 function elegirPlato(platos: Plato[], ctx: SlotContext, totalServicios: number, gapMin: number): Plato {
@@ -44,7 +48,7 @@ function elegirPlato(platos: Plato[], ctx: SlotContext, totalServicios: number, 
     if (asado) return asado
   }
 
-  const candidatos = platos.filter(p => {
+  const cumplenGap = platos.filter(p => {
     if (!p.activo) return false
     if (p.nombre.includes('ASADO') && !(ctx.diaSemana === 'Domingo' && ctx.tipo === 'Cena')) return false
 
@@ -53,6 +57,9 @@ function elegirPlato(platos: Plato[], ctx: SlotContext, totalServicios: number, 
     if (usos.some(u => Math.abs(ctx.diaIndex - u) < gapMin)) return false
     return true
   })
+  // Regla blanda: no repetir la proteína del otro servicio del día (ej. domingo con asado en la cena)
+  const otraProteina = cumplenGap.filter(p => !ctx.proteinaOtroServicio || clasificarProteina(p.nombre) !== ctx.proteinaOtroServicio)
+  const candidatos = otraProteina.length > 0 ? otraProteina : cumplenGap
 
   if (candidatos.length === 0) {
     // Si no hay candidatos que cumplan el gap, relajar y tomar el de mayor gap
@@ -68,7 +75,7 @@ function elegirPlato(platos: Plato[], ctx: SlotContext, totalServicios: number, 
   const scored = candidatos.map(p => {
     const tipo = clasificarProteina(p.nombre)
     const usado = ctx.conteoTipos[tipo] || 0
-    const ideal = PROPORCION_IDEAL[tipo] || 0
+    const ideal = ctx.ideal[tipo] || 0
     const realPct = totalServicios > 0 ? usado / totalServicios : 0
     const deficit = ideal - realPct  // mayor deficit → mayor prioridad
 
@@ -117,6 +124,8 @@ export interface OpcionesGeneracion {
   gapMin?: number
   // Servicios confirmados a conservar tal cual: fijos[diaIndex][tipo]
   fijos?: Record<number, Partial<Record<'Almuerzo' | 'Cena', Servicio>>>
+  // Metas de balance: definen la proporción ideal de proteínas
+  metas?: MetasBalance
 }
 
 export function generarMinuta(
@@ -132,6 +141,15 @@ export function generarMinuta(
   const totalServicios = totalDias * 2
   const gapMin = opciones.gapMin ?? 3
   const fijos = opciones.fijos || {}
+  const ideal = proporcionIdeal(opciones.metas || METAS_DEFAULT)
+  // Proteínas sin platos activos en el catálogo (ej. pescado): su cuota pasa a las no-rojas disponibles,
+  // para no inflar vacuno/cerdo por encima de la meta
+  const disponibles = new Set(platos.filter(p => p.activo).map(p => clasificarProteina(p.nombre)))
+  const faltante = Object.keys(ideal).filter(t => !disponibles.has(t as never)).reduce((a, t) => { const v = ideal[t]; ideal[t] = 0; return a + v }, 0)
+  const receptoras = ['pollo', 'legumbre', 'pasta', 'pescado', 'vegetariano'].filter(t => disponibles.has(t as never))
+  const baseReceptoras = receptoras.reduce((a, t) => a + ideal[t], 0)
+  if (faltante > 0 && baseReceptoras > 0) receptoras.forEach(t => { ideal[t] += faltante * (ideal[t] / baseReceptoras) })
+  const asado = platos.find(p => p.activo && p.nombre.includes('ASADO'))
 
   const usadosPlatos = new Map<string, number[]>()
   const usadosEnsaladas = new Set<string>()
@@ -171,6 +189,11 @@ export function generarMinuta(
         ensaladaIdx++
         continue
       }
+      // Proteína del otro servicio del día: el almuerzo ya elegido, una cena confirmada o el asado del domingo
+      const otro = tipo === 'Almuerzo' ? fijos[i]?.Cena : (servicios[0] || fijos[i]?.Almuerzo)
+      const proteinaOtroServicio = otro?.platoPrincipal
+        ? clasificarProteina(otro.platoPrincipal)
+        : (tipo === 'Almuerzo' && diaSemana === 'Domingo' && asado ? clasificarProteina(asado.nombre) : undefined)
       const ctx: SlotContext = {
         diaIndex: i,
         diaSemana,
@@ -179,6 +202,8 @@ export function generarMinuta(
         usadosEnsaladas,
         usadosAcompsRecientes,
         conteoTipos,
+        proteinaOtroServicio,
+        ideal,
       }
 
       const plato = elegirPlato(platos, ctx, totalServicios, gapMin)
