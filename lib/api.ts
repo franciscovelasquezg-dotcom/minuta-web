@@ -152,6 +152,30 @@ export interface MinutaAPI {
   fechaInicio: string
   diasMinimosRepeticion: number
   dias: DiaAPI[]
+  fuente?: string       // quién guardó la última vez: 'generador' | 'planificador' | 'nuevo_ciclo'
+  actualizado?: number  // epoch ms del último guardado
+}
+
+export const FUENTE_LABEL: Record<string, string> = {
+  generador: 'Generador IA', planificador: 'Planificador', nuevo_ciclo: 'Ciclo nuevo vacío', copia: 'Copia de ciclo',
+}
+
+// Guarda la minuta controlando conflictos: si alguien guardó otra versión después de que esta se cargó,
+// pregunta antes de sobrescribir. Devuelve el nuevo sello `actualizado`, o null si el usuario canceló.
+export async function guardarMinutaControlada(data: MinutaAPI, fuente: string): Promise<number | null> {
+  const { actualizado, ...resto } = data
+  const enviar = (forzar: boolean) => post<{ ok: boolean; actualizado: number }>('guardar_minuta', { ...resto, fuente, actualizadoBase: actualizado ?? 0, forzar })
+  try {
+    return (await enviar(false)).actualizado
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    if (!msg.startsWith('CONFLICTO|')) throw e
+    const [, cuando, quien] = msg.split('|')
+    const fecha = new Date(Number(cuando)).toLocaleString('es-CL')
+    const ok = window.confirm(`Esta minuta fue guardada por otra pantalla (${FUENTE_LABEL[quien] || quien || 'desconocido'}) el ${fecha}, después de que la abriste.\n\n¿Sobrescribir con tu versión? (Cancelar para no guardar y recargar)`)
+    if (!ok) return null
+    return (await enviar(true)).actualizado
+  }
 }
 
 export interface HistorialEntry {

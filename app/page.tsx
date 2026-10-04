@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { api, invalidarCache, getCatalogosConCache, Catalogos, MinutaAPI, ServicioAPI, Turno } from '@/lib/api'
+import Link from 'next/link'
+import { api, invalidarCache, getCatalogosConCache, Catalogos, MinutaAPI, ServicioAPI, Turno, guardarMinutaControlada, FUENTE_LABEL } from '@/lib/api'
 import { generarPDF } from '@/lib/pdf'
 import { detectarRepeticiones } from '@/lib/repeticion'
 import { DiaMinuta, Servicio } from '@/types/minuta'
@@ -43,6 +44,8 @@ export default function Home() {
   const [error, setError] = useState('')
   const [semanaActual, setSemanaActual] = useState(0)
   const [alertaDismissed, setAlertaDismissed] = useState(false)
+  const [aviso, setAviso] = useState('')
+  const esPrimeraCarga = useRef(true)
 
   useEffect(() => {
     // Cargar catálogos con stale-while-revalidate + minuta en paralelo
@@ -62,8 +65,16 @@ export default function Home() {
       e => { setError('Error cargando catálogos: ' + e.message); setCargando(false) }
     )
 
-    api.getMinuta(turnoSeleccionado)
+    const params = new URLSearchParams(window.location.search)
+    const turnoUrl = params.get('turno')
+    const desdeGenerador = params.get('cargado') === 'generador'
+    if (turnoUrl || desdeGenerador) window.history.replaceState(null, '', window.location.pathname)
+
+    api.getMinuta(turnoUrl || turnoSeleccionado)
       .then(m => {
+        // Ya se cargó la minuta del turno pedido: el efecto de cambio de turno no debe volver a pedirla
+        if (turnoUrl && turnoUrl !== turnoSeleccionado) { esPrimeraCarga.current = true; setTurnoSeleccionado(turnoUrl) }
+        if (desdeGenerador) setAviso('generador')
         setMinuta(m)
         setDias(m.dias.length > 0 ? m.dias.map(apiToDia) : [])
         minutaCargada = true
@@ -71,8 +82,6 @@ export default function Home() {
       })
       .catch(e => { setError('Error cargando minuta: ' + e.message); setCargando(false) })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const esPrimeraCarga = useRef(true)
 
   useEffect(() => {
     if (esPrimeraCarga.current) { esPrimeraCarga.current = false; return }
@@ -97,18 +106,36 @@ export default function Home() {
     }))
   }, [])
 
-  const guardar = async () => {
-    if (!minuta || dias.length === 0) return
+  const recargar = async () => {
+    const m = await api.getMinuta(turnoSeleccionado)
+    setMinuta(m); setDias(m.dias.length > 0 ? m.dias.map(apiToDia) : [])
+  }
+
+  const guardar = async (diasAGuardar: DiaMinuta[] = dias) => {
+    if (!minuta || diasAGuardar.length === 0) return
     setGuardando(true)
     try {
-      await api.guardarMinuta({ ...minuta, dias: dias.map(d => ({ ...d, servicios: d.servicios.map(s => s as ServicioAPI) })) })
+      const sello = await guardarMinutaControlada({ ...minuta, dias: diasAGuardar.map(d => ({ ...d, servicios: d.servicios.map(s => s as ServicioAPI) })) }, 'planificador')
       invalidarCache()
+      if (sello === null) { await recargar(); return }
+      setMinuta(m => m ? { ...m, actualizado: sello, fuente: 'planificador' } : m)
       setGuardado(true)
     } catch (e: unknown) {
       alert('Error al guardar: ' + (e instanceof Error ? e.message : String(e)))
     } finally {
       setGuardando(false)
     }
+  }
+
+  const aprobarCiclo = async () => {
+    const pendientes = dias.flatMap(d => d.servicios).filter(s => s.estado !== 'Confirmado')
+    const sinPlato = pendientes.filter(s => !s.platoPrincipal || s.platoPrincipal === 'Por Definir').length
+    if (pendientes.length === 0) { alert('Todos los servicios ya están confirmados.'); return }
+    const ok = window.confirm(`Confirmar ${pendientes.length - sinPlato} servicios y guardar la minuta.${sinPlato ? `\n${sinPlato} servicios sin plato quedan pendientes.` : ''}\n\nLos servicios confirmados quedan bloqueados (🔒) y se enviará el email de notificación.`)
+    if (!ok) return
+    const nuevos = dias.map(d => ({ ...d, servicios: d.servicios.map(s => (s.platoPrincipal && s.platoPrincipal !== 'Por Definir') ? { ...s, estado: 'Confirmado' as const } : s) }))
+    setDias(nuevos)
+    await guardar(nuevos)
   }
 
   const crearCiclo = async () => {
@@ -138,7 +165,8 @@ export default function Home() {
         const f = new Date(fecha); f.setDate(f.getDate() + i)
         return { ...d, dia: i + 1, fecha: `${String(f.getDate()).padStart(2,'0')}/${String(f.getMonth()+1).padStart(2,'0')}`, diaSemana: DIAS_SEMANA[f.getDay()], servicios: d.servicios.map(s => ({ ...s, estado: 'Por Confirmar' as const })) }
       })
-      await api.guardarMinuta({ ...minuta, fechaInicio: nuevaFecha, dias: diasCopiados.map(d => ({ ...d, servicios: d.servicios.map(s => s as ServicioAPI) })) })
+      const sello = await guardarMinutaControlada({ ...minuta, fechaInicio: nuevaFecha, dias: diasCopiados.map(d => ({ ...d, servicios: d.servicios.map(s => s as ServicioAPI) })) }, 'copia')
+      if (sello === null) { await recargar(); return }
       const m = await api.getMinuta(turnoSeleccionado)
       setMinuta(m); setDias(m.dias.map(apiToDia))
       alert('Ciclo copiado ✅')
@@ -263,7 +291,9 @@ export default function Home() {
           <div className="flex items-center gap-1.5 shrink-0">
             <span className="material-symbols-outlined" style={{ fontSize: 15, color: '#10B981' }}>calendar_month</span>
             <span className="font-bold text-white text-sm">{formatFecha(minuta?.fechaInicio, 'dd-mm-yyyy')}</span>
-            <span className="text-xs" style={{ color: '#475569' }}>Ciclo activo</span>
+            <span className="text-xs" style={{ color: '#475569' }} title={minuta?.actualizado ? `Último guardado: ${new Date(minuta.actualizado).toLocaleString('es-CL')}` : undefined}>
+              {minuta?.fuente ? `Desde ${FUENTE_LABEL[minuta.fuente] || minuta.fuente}` : 'Ciclo activo'}
+            </span>
           </div>
 
           {/* Separador */}
@@ -317,7 +347,15 @@ export default function Home() {
               <span className="material-symbols-outlined" style={{ fontSize: 15 }}>add_circle</span>
               + Ciclo
             </button>
-            <button onClick={guardar} disabled={guardando || dias.length === 0}
+            {dias.length > 0 && (
+              <button onClick={aprobarCiclo} disabled={guardando}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors disabled:opacity-50"
+                style={{ background: '#0F172A', border: '1px solid #10B981', color: '#6EE7B7' }} title="Confirma todos los servicios con plato y guarda">
+                <span className="material-symbols-outlined" style={{ fontSize: 15 }}>lock</span>
+                Aprobar ciclo
+              </button>
+            )}
+            <button onClick={() => guardar()} disabled={guardando || dias.length === 0}
               className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold transition-all disabled:opacity-50"
               style={{ background: guardado ? '#065F46' : '#10B981', color: '#0B1326' }}>
               <span className="material-symbols-outlined" style={{ fontSize: 15 }}>{guardado ? 'check' : 'verified'}</span>
@@ -348,17 +386,42 @@ export default function Home() {
             <p className="font-bold text-white mb-1" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: 18 }}>
               Sin minuta para {turnoSeleccionado}
             </p>
-            <p className="text-sm mb-6" style={{ color: '#64748B' }}>
-              Crea un ciclo nuevo de {turnoActual?.diasEnFaena || '—'} días
+            <p className="text-sm mb-6 text-center max-w-md" style={{ color: '#64748B' }}>
+              Genera el menú con IA para cargar los platos del ciclo de {turnoActual?.diasEnFaena || '—'} días. Después podrás revisarlo, editarlo y confirmarlo aquí.
             </p>
-            <button onClick={crearCiclo}
-              className="px-6 py-2.5 rounded-xl font-semibold text-sm"
-              style={{ background: '#10B981', color: '#0B1326' }}>
-              Crear ciclo {turnoActual?.diasEnFaena} días
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <Link href={`/generar?turno=${encodeURIComponent(turnoSeleccionado)}`}
+                className="inline-flex items-center gap-2 px-6 min-h-[44px] rounded-xl font-bold text-sm"
+                style={{ background: 'linear-gradient(135deg,#10B981,#059669)', color: '#fff' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 18 }}>auto_awesome</span>
+                Generar menú con IA
+              </Link>
+              <button onClick={crearCiclo}
+                className="px-4 min-h-[44px] rounded-xl text-sm"
+                style={{ background: '#0F172A', border: '1px solid #334155', color: '#94A3B8' }}>
+                Crear ciclo vacío (manual)
+              </button>
+            </div>
           </div>
         ) : (
           <>
+            {aviso === 'generador' && (
+              <section className="mb-4 rounded-xl px-4 py-3 flex items-center justify-between gap-3" style={{ background: '#052E1C', border: '1px solid #065F46' }}>
+                <span className="text-sm" style={{ color: '#A7F3D0' }}>
+                  <span className="material-symbols-outlined align-middle mr-1.5" style={{ fontSize: 18, color: '#10B981' }}>check_circle</span>
+                  Minuta del <strong>Generador IA</strong> cargada: {dias.length} días · {dias.reduce((a, d) => a + d.servicios.length, 0)} servicios · {confirmados} confirmados. Es la misma que verás en Análisis. Revísala y confirma los servicios.
+                </span>
+                <button onClick={() => setAviso('')} className="shrink-0" style={{ color: '#6EE7B7' }}><span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span></button>
+              </section>
+            )}
+            {dias.every(d => d.servicios.every(s => !s.platoPrincipal || s.platoPrincipal === 'Por Definir')) && (
+              <section className="mb-4 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3" style={{ background: '#0F172A', border: '1px dashed #334155' }}>
+                <span className="text-sm" style={{ color: '#94A3B8' }}>Este ciclo está vacío: todos los servicios están <em>Por Definir</em>. Genera el menú con IA para cargar las opciones, o complétalo a mano.</span>
+                <Link href={`/generar?turno=${encodeURIComponent(turnoSeleccionado)}`} className="shrink-0 inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-lg text-sm font-bold" style={{ background: '#10B981', color: '#0B1326' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 16 }}>auto_awesome</span>Generar con IA
+                </Link>
+              </section>
+            )}
             {/* Alert banner */}
             {platosConflicto.size > 0 && !alertaDismissed && (
               <section className="mb-5 rounded-xl p-4 shadow-lg" style={{ background: '#291E0A', border: '1px solid #D97706' }}>

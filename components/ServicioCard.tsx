@@ -41,6 +41,8 @@ export default function ServicioCard({ servicio, alerta, onChange, opcionesPlato
   const alertaColor = alerta === 'repetido' ? '#7F1D1D' : alerta === 'cercano' ? '#78350F' : '#334155'
   const svcMeta = SVC_META[servicio.tipo] ?? SVC_META['Almuerzo']
   const isAsado = servicio.platoPrincipal?.toUpperCase().includes('ASADO')
+  // Confirmado = bloqueado: no se edita (ni lo toca el generador) hasta cambiar el estado
+  const bloqueado = servicio.estado === 'Confirmado'
 
   const platosOpts    = opcionesPlatos    ?? PLATOS_PRINCIPALES
   const ensaladasOpts = opcionesEnsaladas ?? ENSALADAS
@@ -48,7 +50,7 @@ export default function ServicioCard({ servicio, alerta, onChange, opcionesPlato
 
   return (
     <div className="flex flex-col bg-[#131C2E] rounded-lg p-3"
-      style={{ border: `1px solid ${alertaColor}` }}>
+      style={{ border: `1px solid ${bloqueado && !alerta ? '#065F46' : alertaColor}` }}>
       {/* Service header */}
       <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#334155]/60">
         <div className="flex items-center gap-1.5">
@@ -63,6 +65,7 @@ export default function ServicioCard({ servicio, alerta, onChange, opcionesPlato
         </div>
         <div className="flex items-center gap-1">
           {isAsado && <span className="text-[10px] text-amber-400 font-bold">🔥</span>}
+          {bloqueado && <span className="material-symbols-outlined text-[15px] text-emerald-400" title="Confirmado: bloqueado. Cambia el estado para editar.">lock</span>}
           {alerta === 'repetido' && <span className="text-[9px] bg-red-950/80 border border-red-800/60 text-red-300 px-1.5 py-0.5 rounded font-bold uppercase">Repetido</span>}
           {alerta === 'cercano'   && <span className="text-[9px] bg-amber-950/80 border border-amber-700/60 text-amber-300 px-1.5 py-0.5 rounded font-bold uppercase">Cercano</span>}
           <EstadoBadge estado={servicio.estado as Estado} />
@@ -87,25 +90,26 @@ export default function ServicioCard({ servicio, alerta, onChange, opcionesPlato
             options={platosOpts}
             onChange={(v) => onChange('platoPrincipal', v)}
             className="font-semibold"
+            disabled={bloqueado}
           />
         </div>
 
         {/* Acompañamiento */}
         <div>
           <label className="block font-bold uppercase tracking-wider text-slate-400 mb-1" style={{ fontSize: 9 }}>Acompañamiento</label>
-          <SelectField value={servicio.acompañamiento} options={acompsOpts} onChange={(v) => onChange('acompañamiento', v)} />
+          <SelectField value={servicio.acompañamiento} options={acompsOpts} onChange={(v) => onChange('acompañamiento', v)} disabled={bloqueado} />
         </div>
 
         {/* Ensalada */}
         <div>
           <label className="block font-bold uppercase tracking-wider text-slate-400 mb-1" style={{ fontSize: 9 }}>Ensalada / Entrada</label>
-          <SelectField value={servicio.ensalada} options={ensaladasOpts} onChange={(v) => onChange('ensalada', v)} />
+          <SelectField value={servicio.ensalada} options={ensaladasOpts} onChange={(v) => onChange('ensalada', v)} disabled={bloqueado} />
         </div>
 
         {/* Postre */}
         <div>
           <label className="block font-bold uppercase tracking-wider text-slate-400 mb-1" style={{ fontSize: 9 }}>Postre</label>
-          <SelectField value={servicio.postre || 'Por Definir'} options={POSTRES} onChange={(v) => onChange('postre', v)} />
+          <SelectField value={servicio.postre || 'Por Definir'} options={POSTRES} onChange={(v) => onChange('postre', v)} disabled={bloqueado} />
         </div>
 
         {/* Hipocalórica */}
@@ -115,15 +119,18 @@ export default function ServicioCard({ servicio, alerta, onChange, opcionesPlato
             type="text"
             value={servicio.opcionHipo || ''}
             onChange={(e) => onChange('opcionHipo', e.target.value)}
+            disabled={bloqueado}
             placeholder="Bowl hipocalórico..."
             className="flex-1 bg-transparent text-[10px] text-emerald-300 placeholder:text-emerald-700 focus:outline-none font-semibold"
           />
         </div>
 
-        {/* Estado */}
-        <div>
+        {/* Estado — es también el candado: cambiarlo desde Confirmado desbloquea la edición */}
+        <div className="flex items-center gap-1">
+          {bloqueado && <span className="text-[10px] text-emerald-500 whitespace-nowrap">🔒 Para editar, cambia a →</span>}
           <select value={servicio.estado} onChange={(e) => onChange('estado', e.target.value)}
-            className="w-full text-[10px] bg-transparent border-0 cursor-pointer focus:outline-none text-slate-400"
+            title={bloqueado ? 'Cambia el estado a Por Confirmar o En Revisión para editar' : 'Estado del servicio'}
+            className={`w-full text-[10px] bg-transparent border-0 cursor-pointer focus:outline-none ${bloqueado ? 'text-emerald-400 font-bold' : 'text-slate-400'}`}
             style={{ background: 'transparent' }}>
             {ESTADOS.map((e) => <option key={e} value={e} style={{ background: '#1E293B', color: '#F1F5F9' }}>{e}</option>)}
           </select>

@@ -87,7 +87,8 @@ export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinut
   const proteinas = (Object.entries(porProteina) as [TipoProteina, number][]).sort((a, b) => b[1] - a[1])
 
   const tiposServicio = Array.from(new Set(servicios.map(s => s.tipo)))
-  const etiquetaDia = (a: Aparicion) => `Día ${dias[a.di]?.dia ?? a.di + 1} · ${dias[a.di]?.fecha ?? ''} · ${a.tipo}`
+  const confirmado = (a: Aparicion) => dias[a.di]?.servicios.find(x => x.tipo === a.tipo)?.estado === 'Confirmado'
+  const etiquetaDia = (a: Aparicion) => `${confirmado(a) ? '🔒 ' : ''}Día ${dias[a.di]?.dia ?? a.di + 1} · ${dias[a.di]?.fecha ?? ''} · ${a.tipo}`
   const etiquetaRef = (r: ServicioRef) => etiquetaDia({ di: r.di, tipo: r.tipo })
   const hayQueRevisar = aRevisar.length + parecidos.length > 0
 
@@ -206,7 +207,7 @@ export default function Analisis({ dias: diasIn, diasMinimos }: { dias: DiaMinut
       )}
       {hayQueRevisar && (
         <p className="px-4 py-2.5 text-xs" style={{ color: '#64748B', borderTop: '1px solid #1B263E' }}>
-          <strong style={{ color: '#FCD34D' }}>Muy seguido</strong>: el mismo plato a menos de {diasMinimos} días. <strong style={{ color: '#FCD34D' }}>Justo en el límite</strong>: {diasMinimos} o {diasMinimos + 1} días; cumple, pero conviene espaciarlo. <strong style={{ color: '#C4B5FD' }}>Parecidos</strong>: platos distintos con la misma preparación, salsa o familia a menos de {diasMinimos} días. Corrígelo en el Planificador cambiando uno de los dos platos; si un parecido no lo es, asígnales familias distintas en Catálogos.
+          <strong style={{ color: '#FCD34D' }}>Muy seguido</strong>: el mismo plato a menos de {diasMinimos} días. <strong style={{ color: '#FCD34D' }}>Justo en el límite</strong>: {diasMinimos} o {diasMinimos + 1} días; cumple, pero conviene espaciarlo. <strong style={{ color: '#C4B5FD' }}>Parecidos</strong>: platos distintos con la misma preparación, salsa o familia a menos de {diasMinimos} días. Corrígelo en el Planificador cambiando uno de los dos platos (los marcados 🔒 están confirmados: cámbiales el estado para editarlos, o corrige el otro); si un parecido no lo es, asígnales familias distintas en Catálogos.
         </p>
       )}
     </section>

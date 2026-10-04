@@ -1,8 +1,10 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { api, Catalogos, Turno } from '@/lib/api'
-import { generarMinuta } from '@/lib/generador'
+import { useRouter } from 'next/navigation'
+import { api, Catalogos, Turno, MinutaAPI, guardarMinutaControlada, FUENTE_LABEL } from '@/lib/api'
+import { generarMinuta, OpcionesGeneracion } from '@/lib/generador'
+import { aFechaISO, formatFecha } from '@/lib/fecha'
 import { DiaMinuta, Servicio } from '@/types/minuta'
 import { detectarRepeticiones } from '@/lib/repeticion'
 import DiaCard from '@/components/DiaCard'
@@ -38,12 +40,38 @@ export default function GenerarPage() {
   const [guardado, setGuardado] = useState(false)
   const [semanaActual, setSemanaActual] = useState(0)
   const [filtroTabla, setFiltroTabla] = useState('')
+  // Minuta que hoy está guardada para el turno (la que ven Planificador y Análisis)
+  const [actual, setActual] = useState<MinutaAPI | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
+    // Turno pedido desde el Planificador o el Análisis (?turno=14x14)
+    const t = new URLSearchParams(window.location.search).get('turno')
     api.getCatalogos()
-      .then(c => { setCatalogos(c) })
+      .then(c => { setCatalogos(c); if (t && c.turnos.some(x => x.codigo === t)) setTurnoSel(t) })
       .finally(() => setCargando(false))
   }, [])
+
+  // Al cambiar de turno, partir desde la minuta actual: mismo casino, fecha y días mínimos
+  useEffect(() => {
+    let vigente = true
+    api.getMinuta(turnoSel).then(m => {
+      if (!vigente) return
+      setActual(m)
+      setDias([]); setGuardado(false)
+      if (m.dias.length > 0) {
+        if (m.casino) setCasino(m.casino)
+        const f = aFechaISO(m.fechaInicio)
+        if (f) setFechaInicio(f)
+        setGapDias(m.diasMinimosRepeticion || 3)
+      }
+    }).catch(() => { if (vigente) setActual(null) })
+    return () => { vigente = false }
+  }, [turnoSel])
+
+  const mismaMinuta = !!actual && actual.dias.length > 0 && aFechaISO(actual.fechaInicio) === fechaInicio
+  const confirmadosActual = actual ? actual.dias.reduce((a, d) => a + d.servicios.filter(s => s.estado === 'Confirmado').length, 0) : 0
+  const fijosVigentes = mismaMinuta ? confirmadosActual : 0
 
   const turnoActual: Turno | undefined = catalogos?.turnos.find(t => t.codigo === turnoSel)
 
@@ -53,13 +81,20 @@ export default function GenerarPage() {
     setGuardado(false)
     setSemanaActual(0)
     setTimeout(() => {
+      // Los servicios confirmados de la minuta actual se conservan (solo si es el mismo ciclo)
+      const fijos: OpcionesGeneracion['fijos'] = {}
+      if (mismaMinuta && actual) actual.dias.forEach((d, di) => d.servicios.forEach(sv => {
+        if (sv.estado !== 'Confirmado') return
+        fijos[di] = { ...(fijos[di] || {}), [sv.tipo]: { ...sv, postre: sv.postre || 'Por Definir', opcionHipo: sv.opcionHipo || '' } as Servicio }
+      }))
       const resultado = generarMinuta(
         catalogos.platos,
         catalogos.ensaladas,
         catalogos.acompañamientos,
         turnoActual,
         fechaInicio,
-        casino
+        casino,
+        { gapMin: gapDias, fijos }
       )
       setDias(resultado)
       setGenerando(false)
@@ -79,16 +114,24 @@ export default function GenerarPage() {
 
   const guardar = async () => {
     if (!turnoActual || dias.length === 0) return
+    if (actual && actual.dias.length > 0 && !mismaMinuta) {
+      const ok = window.confirm(`Esto REEMPLAZA la minuta actual del turno ${turnoSel} (inicio ${formatFecha(actual.fechaInicio, 'dd-mm-yyyy')}, ${confirmadosActual} servicios confirmados) por un ciclo nuevo que inicia el ${formatFecha(fechaInicio, 'dd-mm-yyyy')}.\n\nLa anterior queda en Historial. ¿Continuar?`)
+      if (!ok) return
+    }
     setGuardando(true)
     try {
-      await api.guardarMinuta({
+      const sello = await guardarMinutaControlada({
         turno: turnoSel,
         casino,
         fechaInicio,
         diasMinimosRepeticion: gapDias,
         dias: dias.map(d => ({ ...d, servicios: d.servicios.map(s => ({ ...s })) })),
-      })
+        actualizado: actual?.actualizado ?? 0,
+      }, 'generador')
+      if (sello === null) return
       setGuardado(true)
+      // Mostrar de inmediato lo cargado en el Planificador (misma hoja que lee el Análisis)
+      router.push(`/?turno=${encodeURIComponent(turnoSel)}&cargado=generador`)
     } catch (e: unknown) {
       alert('Error: ' + (e instanceof Error ? e.message : String(e)))
     } finally {
@@ -162,6 +205,20 @@ export default function GenerarPage() {
           </div>
         ) : (
           <div className="space-y-5">
+
+            {/* Minuta actual del turno: qué se va a reemplazar o conservar */}
+            {actual && actual.dias.length > 0 && (
+              <div className="rounded-xl px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" style={{ background: '#0F172A', border: `1px solid ${mismaMinuta ? '#065F46' : '#92400E'}` }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 18, color: mismaMinuta ? '#10B981' : '#F59E0B' }}>{mismaMinuta ? 'link' : 'swap_horiz'}</span>
+                <span className="text-white font-semibold">Minuta actual del turno {turnoSel}: inicia {formatFecha(actual.fechaInicio, 'dd-mm-yyyy')}</span>
+                <span style={{ color: '#94A3B8' }}>{actual.dias.length} días · {confirmadosActual} servicios confirmados{actual.fuente ? ` · guardada desde ${FUENTE_LABEL[actual.fuente] || actual.fuente}` : ''}{actual.actualizado ? ` el ${new Date(actual.actualizado).toLocaleString('es-CL')}` : ''}</span>
+                <span className="w-full text-xs" style={{ color: mismaMinuta ? '#6EE7B7' : '#FCD34D' }}>
+                  {mismaMinuta
+                    ? (fijosVigentes > 0 ? `Al generar se conservan los ${fijosVigentes} servicios confirmados (🔒) y se rellena el resto.` : 'Al generar se reemplazan todos los servicios (ninguno está confirmado).')
+                    : 'Cambiaste la fecha de inicio: al guardar se creará un ciclo nuevo y la minuta actual pasará al Historial.'}
+                </span>
+              </div>
+            )}
 
             {/* Barra horizontal de configuración del ciclo */}
             <div className="rounded-xl p-4 lg:p-5" style={{ background: '#0F172A', border: '1px solid #1E293B' }}>
@@ -242,7 +299,7 @@ export default function GenerarPage() {
                     ) : (
                       <>
                         <span className="material-symbols-outlined" style={{ fontSize: 18 }}>auto_awesome</span>
-                        Generar Minuta Inteligente
+                        {fijosVigentes > 0 ? `Generar (mantiene ${fijosVigentes} 🔒)` : 'Generar Minuta Inteligente'}
                       </>
                     )}
                   </button>

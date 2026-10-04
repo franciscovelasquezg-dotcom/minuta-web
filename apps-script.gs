@@ -224,6 +224,8 @@ function getMinuta(turno) {
     casino:              meta[3] || '',
     fechaInicio:         meta[1] || '',
     diasMinimosRepeticion: Number(meta[2]) || 3,
+    fuente:              meta[4] || '',              // 'generador' | 'planificador' | 'nuevo_ciclo' | ...
+    actualizado:         Number(meta[5]) || 0,       // epoch ms del último guardado (control de conflictos)
     dias,
   };
 
@@ -238,12 +240,21 @@ function _invalidarCacheMinuta(turno) {
 // ── POST: Guardar minuta completa ──────────────────────────────
 
 function guardarMinuta(body) {
-  const { turno, casino, fechaInicio, diasMinimosRepeticion, dias } = body;
+  const { turno, casino, fechaInicio, diasMinimosRepeticion, dias, fuente, actualizadoBase, forzar } = body;
   if (!turno) throw new Error('Falta turno');
 
   const ss         = SpreadsheetApp.openById(SPREADSHEET_ID);
   const nombreHoja = HOJA_PREFIX_MINUTA + turno;
   let hoja         = ss.getSheetByName(nombreHoja);
+
+  // Control de conflictos: si el cliente cargó la versión X y en la hoja hay otra más nueva, no pisarla sin permiso.
+  if (hoja && actualizadoBase !== undefined && !forzar) {
+    const meta = hoja.getRange(1, 1, 1, 6).getValues()[0];
+    const actual = Number(meta[5]) || 0;
+    if (actual && actual !== Number(actualizadoBase)) {
+      throw new Error('CONFLICTO|' + actual + '|' + (meta[4] || ''));
+    }
+  }
 
   if (!hoja) {
     hoja = ss.insertSheet(nombreHoja);
@@ -251,9 +262,10 @@ function guardarMinuta(body) {
     hoja.clearContents();
   }
 
+  const actualizado = Date.now();
   // Una sola escritura en lote: appendRow por fila hace un viaje a Sheets por cada servicio (lento).
   const filas = [
-    [turno, fechaInicio, diasMinimosRepeticion, casino, '', '', '', '', '', ''],
+    [turno, fechaInicio, diasMinimosRepeticion, casino, fuente || 'planificador', actualizado, '', '', '', ''],
     ['Dia', 'Fecha', 'DiaSemana', 'Servicio', 'Ensalada', 'Acompañamiento', 'Plato Principal', 'Postre', 'Opcion Hipo', 'Estado'],
   ];
   (dias || []).forEach(dia => {
@@ -281,7 +293,7 @@ function guardarMinuta(body) {
   }
 
   _invalidarCacheMinuta(turno);
-  return { ok: true, hoja: nombreHoja, filas: (dias || []).length };
+  return { ok: true, hoja: nombreHoja, filas: (dias || []).length, actualizado };
 }
 
 // ── Historial de versiones ─────────────────────────────────────
@@ -482,7 +494,7 @@ function nuevoCiclo(body) {
     });
   }
 
-  return guardarMinuta({ turno, casino, fechaInicio, diasMinimosRepeticion: diasMinimosRepeticion || 3, dias });
+  return guardarMinuta({ turno, casino, fechaInicio, diasMinimosRepeticion: diasMinimosRepeticion || 3, dias, fuente: 'nuevo_ciclo' });
 }
 
 // ── Metas de balance del menú (JSON en hoja Config, clave metas_balance) ──

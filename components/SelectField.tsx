@@ -7,9 +7,10 @@ interface SelectFieldProps {
   options: string[]
   onChange: (val: string) => void
   className?: string
+  disabled?: boolean
 }
 
-export default function SelectField({ value, options, onChange, className = '' }: SelectFieldProps) {
+export default function SelectField({ value, options, onChange, className = '', disabled = false }: SelectFieldProps) {
   // Un <select> cuyo value no está entre sus opciones muestra la PRIMERA opción (ej. "ASADO TRADICIONAL")
   // aunque el dato sea otro, y además impide elegir esa opción. Por eso "Por Definir" va siempre primero,
   // y un valor guardado que ya no está en el catálogo (plato desactivado) se conserva visible.
@@ -21,8 +22,9 @@ export default function SelectField({ value, options, onChange, className = '' }
   return (
     <select
       value={actual}
+      disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
-      className={`w-full min-h-[2.25rem] px-3 py-1.5 border text-sm rounded cursor-pointer appearance-none focus:outline-none focus:ring-1 leading-snug ${className}`}
+      className={`w-full min-h-[2.25rem] px-3 py-1.5 border text-sm rounded cursor-pointer disabled:cursor-not-allowed disabled:opacity-70 appearance-none focus:outline-none focus:ring-1 leading-snug ${className}`}
       style={{ background: '#0F172A', color: sinDefinir ? '#64748B' : '#E2E8F0', fontStyle: sinDefinir ? 'italic' : 'normal', borderColor: '#475569', fontFamily: 'Manrope, sans-serif' }}
     >
       {opciones.map((opt) => (

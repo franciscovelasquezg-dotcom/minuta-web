@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { api, MinutaAPI } from '@/lib/api'
+import { api, MinutaAPI, FUENTE_LABEL } from '@/lib/api'
 import AppHeader from '@/components/AppHeader'
 import { DiaMinuta } from '@/types/minuta'
 import Analisis from '@/components/Analisis'
@@ -26,6 +26,7 @@ export default function AnalisisPage() {
   const [diasMinimos, setDiasMinimos] = useState(3)
   const [casino, setCasino] = useState('Casino de Faena')
   const [cargando, setCargando] = useState(true)
+  const [origen, setOrigen] = useState('')
 
   useEffect(() => {
     api.getCatalogos().then(c => setTurnos(c.turnos)).catch(() => {})
@@ -36,6 +37,7 @@ export default function AnalisisPage() {
       setDias(m.dias.map(apiToDia))
       setDiasMinimos(m.diasMinimosRepeticion || 3)
       setCasino(m.casino || 'Casino de Faena')
+      setOrigen(m.fuente ? `Guardada desde ${FUENTE_LABEL[m.fuente] || m.fuente}${m.actualizado ? ` el ${new Date(m.actualizado).toLocaleString('es-CL')}` : ''}` : '')
     }).catch(() => setDias([])).finally(() => setCargando(false))
   }, [turno])
 
@@ -66,7 +68,7 @@ export default function AnalisisPage() {
           <div>
             <h1 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">Análisis del ciclo</h1>
             {dias.length > 0 && (
-              <p className="text-sm mt-1" style={{ color: '#94A3B8' }}>Turno {turno} · {rango} · {dias.length} días · {totalServicios} servicios</p>
+              <p className="text-sm mt-1" style={{ color: '#94A3B8' }}>Turno {turno} · {rango} · {dias.length} días · {totalServicios} servicios{origen ? ` · ${origen}` : ''}</p>
             )}
           </div>
 
@@ -78,9 +80,9 @@ export default function AnalisisPage() {
           ) : dias.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <span className="material-symbols-outlined mb-3" style={{ fontSize: 48, color: '#334155' }}>bar_chart</span>
-              <p className="text-sm mb-4" style={{ color: '#64748B' }}>No hay minuta guardada para el turno <strong className="text-white">{turno}</strong>.</p>
-              <Link href="/" className="inline-flex items-center gap-2 px-4 min-h-[44px] rounded-lg text-sm font-semibold" style={{ background: '#059669', color: '#fff' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_back</span>Ir al Planificador
+              <p className="text-sm mb-4" style={{ color: '#64748B' }}>No hay minuta guardada para el turno <strong className="text-white">{turno}</strong>. Genérala con IA para poder analizarla.</p>
+              <Link href={`/generar?turno=${encodeURIComponent(turno)}`} className="inline-flex items-center gap-2 px-4 min-h-[44px] rounded-lg text-sm font-semibold" style={{ background: '#059669', color: '#fff' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16 }}>auto_awesome</span>Generar menú con IA
               </Link>
             </div>
           ) : (

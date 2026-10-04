@@ -50,10 +50,7 @@ function elegirPlato(platos: Plato[], ctx: SlotContext, totalServicios: number, 
 
     // Verificar gap mínimo
     const usos = ctx.usadosPlatos.get(p.id) || []
-    if (usos.length > 0) {
-      const ultimoUso = usos[usos.length - 1]
-      if (ctx.diaIndex - ultimoUso < gapMin) return false
-    }
+    if (usos.some(u => Math.abs(ctx.diaIndex - u) < gapMin)) return false
     return true
   })
 
@@ -62,11 +59,8 @@ function elegirPlato(platos: Plato[], ctx: SlotContext, totalServicios: number, 
     return platos
       .filter(p => p.activo && !p.nombre.includes('ASADO'))
       .sort((a, b) => {
-        const ua = ctx.usadosPlatos.get(a.id) || []
-        const ub = ctx.usadosPlatos.get(b.id) || []
-        const gapA = ua.length ? ctx.diaIndex - ua[ua.length - 1] : 999
-        const gapB = ub.length ? ctx.diaIndex - ub[ub.length - 1] : 999
-        return gapB - gapA
+        const dist = (id: string) => Math.min(999, ...(ctx.usadosPlatos.get(id) || []).map(u => Math.abs(ctx.diaIndex - u)))
+        return dist(b.id) - dist(a.id)
       })[0]
   }
 
@@ -118,22 +112,41 @@ function elegirAcompañamiento(acomps: Acompañamiento[], plato: Plato, ctx: Slo
   return candidatos[ctx.diaIndex % Math.max(1, candidatos.length)] || acomps[0]
 }
 
+export interface OpcionesGeneracion {
+  // Días mínimos entre repeticiones de un mismo plato (el que eligió el usuario)
+  gapMin?: number
+  // Servicios confirmados a conservar tal cual: fijos[diaIndex][tipo]
+  fijos?: Record<number, Partial<Record<'Almuerzo' | 'Cena', Servicio>>>
+}
+
 export function generarMinuta(
   platos: Plato[],
   ensaladas: Ensalada[],
   acomps: Acompañamiento[],
   turno: Turno,
   fechaInicio: string,
-  casino: string
+  _casino: string,
+  opciones: OpcionesGeneracion = {}
 ): DiaMinuta[] {
   const totalDias = turno.diasEnFaena
   const totalServicios = totalDias * 2
-  const gapMin = Math.min(7, Math.max(3, Math.floor(totalDias / Math.max(1, platos.filter(p => p.activo && !p.nombre.includes('ASADO')).length))))
+  const gapMin = opciones.gapMin ?? 3
+  const fijos = opciones.fijos || {}
 
   const usadosPlatos = new Map<string, number[]>()
   const usadosEnsaladas = new Set<string>()
   const usadosAcompsRecientes: string[] = []
   const conteoTipos: Record<string, number> = {}
+
+  // Los confirmados cuentan desde el inicio: el resto se genera respetando la separación con ellos
+  const idPorNombre = new Map(platos.map(p => [p.nombre, p.id]))
+  Object.entries(fijos).forEach(([di, porTipo]) => Object.values(porTipo).forEach(svc => {
+    if (!svc) return
+    const id = idPorNombre.get(svc.platoPrincipal) || svc.platoPrincipal
+    usadosPlatos.set(id, [...(usadosPlatos.get(id) || []), Number(di)])
+    const t = clasificarProteina(svc.platoPrincipal)
+    conteoTipos[t] = (conteoTipos[t] || 0) + 1
+  }))
 
   // Pre-shuffle ensaladas para variedad
   const ensaladasOrdenadas = shuffle(ensaladas.filter(e => e.activo), 42)
@@ -152,6 +165,12 @@ export function generarMinuta(
     const servicios: Servicio[] = []
 
     for (const tipo of ['Almuerzo', 'Cena'] as const) {
+      const fijo = fijos[i]?.[tipo]
+      if (fijo) {
+        servicios.push({ ...fijo })
+        ensaladaIdx++
+        continue
+      }
       const ctx: SlotContext = {
         diaIndex: i,
         diaSemana,
