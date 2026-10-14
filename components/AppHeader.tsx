@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 interface Props {
-  activePage: 'planificador' | 'generar' | 'catalogos' | 'subir' | 'historial' | 'analisis'
+  activePage: 'planificador' | 'generar' | 'catalogos' | 'subir' | 'historial' | 'analisis' | 'recepcion'
   rightSlot?: React.ReactNode
 }
 
@@ -14,6 +14,7 @@ const NAV = [
   { key: 'subir',        label: 'Importar',            href: '/subir' },
   { key: 'historial',    label: 'Historial',           href: '/historial' },
   { key: 'analisis',     label: 'Análisis',            href: '/analisis' },
+  { key: 'recepcion',    label: 'Recepción',           href: '/recepcion' },
 ]
 
 export default function AppHeader({ activePage, rightSlot }: Props) {
@@ -72,6 +73,11 @@ export default function AppHeader({ activePage, rightSlot }: Props) {
               style={{ background: '#10B981', boxShadow: '0 0 6px rgba(16,185,129,0.8)' }} />
             <span className="text-xs" style={{ color: '#64748B' }}>Live</span>
           </div>
+
+          <Link href="/recepcion" className="inline-flex 2xl:hidden items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold" style={{ background: '#1E293B', color: '#10B981', border: '1px solid #334155' }} title="Recepción de camión">
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>local_shipping</span>
+            <span className="hidden sm:inline">Recepción</span>
+          </Link>
 
           {/* Logout */}
           <button onClick={logout}

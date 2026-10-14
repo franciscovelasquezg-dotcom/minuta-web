@@ -16,6 +16,8 @@ const HOJA_TURNOS          = 'Turnos';
 const HOJA_PREFIX_MINUTA   = 'Minuta_';
 const HOJA_PREFIX_HISTORIAL = 'Historial_';
 const HOJA_CONFIG          = 'Config';
+const HOJA_RECEPCIONES     = 'Recepciones';
+const CARPETA_GUIAS        = 'Minuta Web - Guias de recepcion';
 
 // ── Seguridad HMAC ────────────────────────────────────────────
 function computeHmac(message, secret) {
@@ -48,6 +50,7 @@ function doGet(e) {
       case 'catalogos':       return jsonOk(getCatalogosCompletos());
       case 'historial':       return jsonOk(getHistorial(e.parameter.turno));
       case 'metas':           return jsonOk(getMetas());
+      case 'recepciones':     return jsonOk(getRecepciones());
       default:                return jsonError('tipo no reconocido');
     }
   } catch (err) {
@@ -70,6 +73,7 @@ function doPost(e) {
       case 'guardar_acomp':    return jsonOk(guardarAcompañamiento(body));
       case 'nuevo_ciclo':      return jsonOk(nuevoCiclo(body));
       case 'guardar_metas':    return jsonOk(guardarMetas(body));
+      case 'guardar_recepcion': return jsonOk(guardarRecepcion(body));
       default:                 return jsonError('acción no reconocida');
     }
   } catch (err) {
@@ -528,6 +532,79 @@ function guardarMetas(body) {
   if (index > 0) hoja.getRange(index + 1, 1, 1, 3).setValues([fila]);
   else hoja.appendRow(fila);
   return { ok: true };
+}
+
+
+// ── Recepción de camión: pedido esperado, conteo y temperatura ──
+// Una fila por recepción. Items y Temps van como JSON.
+const REC_COLS = ['Id', 'Fecha', 'Hora', 'Proveedor', 'Guia', 'Estado', 'Responsable', 'FotoUrl', 'Items', 'Temps', 'Obs', 'Actualizado'];
+
+function _hojaRecepciones(ss) {
+  let h = ss.getSheetByName(HOJA_RECEPCIONES);
+  if (!h) {
+    h = ss.insertSheet(HOJA_RECEPCIONES);
+    h.appendRow(REC_COLS);
+    h.setFrozenRows(1);
+  }
+  return h;
+}
+
+function _filaARecepcion(r) {
+  const parse = v => { try { return v ? JSON.parse(v) : []; } catch (e) { return []; } };
+  return {
+    id: String(r[0]), fecha: String(r[1]), hora: String(r[2]), proveedor: String(r[3]), guia: String(r[4]),
+    estado: String(r[5]), responsable: String(r[6]), fotoUrl: String(r[7]),
+    items: parse(r[8]), temps: parse(r[9]), obs: String(r[10]), actualizado: Number(r[11]) || 0,
+  };
+}
+
+// Últimas 40 recepciones, la más nueva primero
+function getRecepciones() {
+  const h = _hojaRecepciones(SpreadsheetApp.openById(SPREADSHEET_ID));
+  const rows = h.getDataRange().getValues().slice(1).filter(r => r[0]);
+  return rows.map(_filaARecepcion).sort((a, b) => b.actualizado - a.actualizado).slice(0, 40);
+}
+
+function _guardarFotoGuia(id, dataUrl) {
+  const m = /^data:image\/(jpeg|png);base64,(.+)$/.exec(String(dataUrl || ''));
+  if (!m) return '';
+  const it = DriveApp.getFoldersByName(CARPETA_GUIAS);
+  const carpeta = it.hasNext() ? it.next() : DriveApp.createFolder(CARPETA_GUIAS);
+  const blob = Utilities.newBlob(Utilities.base64Decode(m[2]), 'image/' + m[1], 'guia_' + id + '.' + (m[1] === 'png' ? 'png' : 'jpg'));
+  return carpeta.createFile(blob).getUrl();
+}
+
+function guardarRecepcion(body) {
+  const r = body.recepcion;
+  if (!r || !r.id) throw new Error('Falta la recepción');
+  const items = Array.isArray(r.items) ? r.items.slice(0, 300) : [];
+  const temps = Array.isArray(r.temps) ? r.temps.slice(0, 100) : [];
+  if (JSON.stringify(items).length > 40000 || JSON.stringify(temps).length > 20000) throw new Error('Recepción demasiado grande');
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const h = _hojaRecepciones(ss);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const rows = h.getDataRange().getValues();
+    const idx = rows.findIndex((x, i) => i > 0 && String(x[0]) === String(r.id));
+    let fotoUrl = idx > 0 ? String(rows[idx][7] || '') : '';
+    let avisoFoto = '';
+    if (r.foto) {
+      try { fotoUrl = _guardarFotoGuia(r.id, r.foto) || fotoUrl; }
+      catch (e) { avisoFoto = 'No se pudo guardar la foto: ' + e.message; }
+    }
+    const ahora = Date.now();
+    const fila = [
+      String(r.id), String(r.fecha || ''), String(r.hora || ''), String(r.proveedor || '').slice(0, 120), String(r.guia || '').slice(0, 60),
+      r.estado === 'cerrada' ? 'cerrada' : 'abierta', String(r.responsable || '').slice(0, 80), fotoUrl,
+      JSON.stringify(items), JSON.stringify(temps), String(r.obs || '').slice(0, 1000), ahora,
+    ];
+    if (idx > 0) h.getRange(idx + 1, 1, 1, fila.length).setValues([fila]);
+    else h.appendRow(fila);
+    return { ok: true, actualizado: ahora, fotoUrl, avisoFoto };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // ── Inicializar Sheets con estructura y datos base ─────────────
