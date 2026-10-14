@@ -1,5 +1,5 @@
 import type { MetasBalance } from '@/lib/balance'
-import type { Recepcion } from '@/lib/recepcion'
+import type { Recepcion, CatalogoRec, ProveedorRec, ProductoRec, ItemRecepcion } from '@/lib/recepcion'
 
 // ── Caché en memoria (sesión) ──────────────────────────────────
 const _memCache = new Map<string, { data: unknown; ts: number }>()
@@ -202,6 +202,9 @@ export const api = {
   guardarMetas: (metas: MetasBalance) => post<{ ok: boolean }>('guardar_metas', { metas }),
   getRecepciones: () => get<Recepcion[]>('recepciones'),
   guardarRecepcion: (recepcion: Recepcion & { foto?: string }) =>
-    post<{ ok: boolean; actualizado: number; fotoUrl: string; avisoFoto: string }>('guardar_recepcion', { recepcion }),
+    post<{ ok: boolean; actualizado: number; fotoUrl: string; avisoFoto: string; items: ItemRecepcion[] }>('guardar_recepcion', { recepcion }),
+  getCatalogoRec: () => get<CatalogoRec>('catalogo_rec'),
+  guardarProveedorRec: (proveedor: Partial<ProveedorRec> & { id: string; eliminar?: boolean }) => post<{ ok: boolean }>('guardar_prov_rec', { proveedor }),
+  guardarProductoRec: (producto: Partial<ProductoRec> & { id: string; eliminar?: boolean }) => post<{ ok: boolean }>('guardar_prod_rec', { producto }),
   guardarAcompañamiento: (acomp: Partial<Acompañamiento>) => post<{ ok: boolean }>('guardar_acomp', { acomp }),
 }

@@ -17,6 +17,8 @@ const HOJA_PREFIX_MINUTA   = 'Minuta_';
 const HOJA_PREFIX_HISTORIAL = 'Historial_';
 const HOJA_CONFIG          = 'Config';
 const HOJA_RECEPCIONES     = 'Recepciones';
+const HOJA_REC_PROV       = 'RecProveedores';
+const HOJA_REC_PROD       = 'RecProductos';
 const CARPETA_GUIAS        = 'Minuta Web - Guias de recepcion';
 
 // ── Seguridad HMAC ────────────────────────────────────────────
@@ -51,6 +53,7 @@ function doGet(e) {
       case 'historial':       return jsonOk(getHistorial(e.parameter.turno));
       case 'metas':           return jsonOk(getMetas());
       case 'recepciones':     return jsonOk(getRecepciones());
+      case 'catalogo_rec':    return jsonOk(getCatalogoRec());
       default:                return jsonError('tipo no reconocido');
     }
   } catch (err) {
@@ -74,6 +77,8 @@ function doPost(e) {
       case 'nuevo_ciclo':      return jsonOk(nuevoCiclo(body));
       case 'guardar_metas':    return jsonOk(guardarMetas(body));
       case 'guardar_recepcion': return jsonOk(guardarRecepcion(body));
+      case 'guardar_prov_rec':  return jsonOk(guardarCatalogoRec(HOJA_REC_PROV, ['Id', 'Nombre', 'Activo'], body.proveedor));
+      case 'guardar_prod_rec':  return jsonOk(guardarCatalogoRec(HOJA_REC_PROD, ['Id', 'Nombre', 'Unidad', 'Frio', 'Proveedor', 'Activo'], body.producto));
       default:                 return jsonError('acción no reconocida');
     }
   } catch (err) {
@@ -578,6 +583,14 @@ function guardarRecepcion(body) {
   const r = body.recepcion;
   if (!r || !r.id) throw new Error('Falta la recepción');
   const items = Array.isArray(r.items) ? r.items.slice(0, 300) : [];
+  let avisoFotos = '';
+  items.forEach(function (it, n) {
+    if (it.foto) {
+      try { it.fotoUrl = _guardarFotoGuia(r.id + '_p' + n + '_' + Date.now(), it.foto) || it.fotoUrl || ''; }
+      catch (e) { avisoFotos = 'No se pudo guardar una foto de producto: ' + e.message; }
+    }
+    delete it.foto;
+  });
   const temps = Array.isArray(r.temps) ? r.temps.slice(0, 100) : [];
   if (JSON.stringify(items).length > 40000 || JSON.stringify(temps).length > 20000) throw new Error('Recepción demasiado grande');
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -601,7 +614,81 @@ function guardarRecepcion(body) {
     ];
     if (idx > 0) h.getRange(idx + 1, 1, 1, fila.length).setValues([fila]);
     else h.appendRow(fila);
-    return { ok: true, actualizado: ahora, fotoUrl, avisoFoto };
+    if (fila[5] === 'cerrada' && !(idx > 0 && String(rows[idx][5]) === 'cerrada')) {
+      try { _alertaRecepcion(ss, r, items, temps, fotoUrl); } catch (e) { avisoFoto = (avisoFoto ? avisoFoto + ' ' : '') + 'No se pudo enviar el aviso: ' + e.message; }
+    }
+    return { ok: true, actualizado: ahora, fotoUrl, avisoFoto: avisoFoto || avisoFotos, items };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// Aviso por correo al cerrar una recepción con faltas, sobras o temperatura fuera de rango
+function _tempFuera(t) {
+  const v = Number(t.valor);
+  return t.categoria === 'congelado' ? v > -18 : (v < 0 || v > 5);
+}
+
+function _alertaRecepcion(ss, r, items, temps, fotoUrl) {
+  const faltas = items.filter(i => i.recibido !== null && i.recibido !== undefined && Number(i.recibido) < Number(i.esperado));
+  const sobras = items.filter(i => i.recibido !== null && i.recibido !== undefined && Number(i.recibido) > Number(i.esperado));
+  const sinContar = items.filter(i => i.recibido === null || i.recibido === undefined);
+  const fuera = temps.filter(_tempFuera);
+  if (!faltas.length && !sobras.length && !fuera.length) return;
+  const email = getConfigEmail(ss) || Session.getActiveUser().getEmail();
+  if (!email) return;
+  const linea = i => '  - ' + i.producto + ': esperado ' + i.esperado + ' ' + i.unidad + ', llegó ' + i.recibido + (i.nota ? ' (' + i.nota + ')' : '');
+  const partes = [
+    'Recepción cerrada con problemas',
+    'Proveedor: ' + (r.proveedor || '-') + ' · Guía: ' + (r.guia || '-') + ' · Recibe: ' + (r.responsable || '-'),
+    'Fecha: ' + r.fecha + ' ' + r.hora,
+  ];
+  if (faltas.length) partes.push('', 'FALTAS:', faltas.map(linea).join('\n'));
+  if (sobras.length) partes.push('', 'SOBRAS:', sobras.map(linea).join('\n'));
+  if (fuera.length) partes.push('', 'TEMPERATURA FUERA DE RANGO:', fuera.map(t => '  - ' + t.etiqueta + ': ' + t.valor + ' °C (' + t.categoria + ')').join('\n'));
+  if (sinContar.length) partes.push('', 'Sin contar: ' + sinContar.length + ' producto(s)');
+  if (r.obs) partes.push('', 'Observaciones: ' + r.obs);
+  if (fotoUrl) partes.push('', 'Foto de la guía: ' + fotoUrl);
+  partes.push('', 'Ver: https://minuta-web-two.vercel.app/recepcion');
+  MailApp.sendEmail(email, 'Recepción con problemas — ' + (r.proveedor || 'sin proveedor') + ' — ' + r.fecha, partes.join('\n'));
+}
+
+// Catálogo de proveedores y productos de recepción
+function _hojaCat(ss, nombre, cols) {
+  let h = ss.getSheetByName(nombre);
+  if (!h) { h = ss.insertSheet(nombre); h.appendRow(cols); h.setFrozenRows(1); }
+  return h;
+}
+
+function getCatalogoRec() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const prov = _hojaCat(ss, HOJA_REC_PROV, ['Id', 'Nombre', 'Activo']).getDataRange().getValues().slice(1).filter(r => r[0])
+    .map(r => ({ id: String(r[0]), nombre: String(r[1]), activo: r[2] !== false && String(r[2]).toLowerCase() !== 'false' }));
+  const prod = _hojaCat(ss, HOJA_REC_PROD, ['Id', 'Nombre', 'Unidad', 'Frio', 'Proveedor', 'Activo']).getDataRange().getValues().slice(1).filter(r => r[0])
+    .map(r => ({ id: String(r[0]), nombre: String(r[1]), unidad: String(r[2]), frio: String(r[3] || 'ambiente'), proveedor: String(r[4] || ''), activo: r[5] !== false && String(r[5]).toLowerCase() !== 'false' }));
+  return { proveedores: prov, productos: prod };
+}
+
+// Guarda (o actualiza por Id) una fila; con eliminar=true la borra
+function guardarCatalogoRec(nombreHoja, cols, obj) {
+  if (!obj || !obj.id || !String(obj.nombre || '').trim()) throw new Error('Faltan datos del catálogo');
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const h = _hojaCat(ss, nombreHoja, cols);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const rows = h.getDataRange().getValues();
+    const idx = rows.findIndex((x, i) => i > 0 && String(x[0]) === String(obj.id));
+    if (obj.eliminar) { if (idx > 0) h.deleteRow(idx + 1); return { ok: true }; }
+    const clave = c => c === 'Id' ? 'id' : c === 'Frio' ? 'frio' : c.charAt(0).toLowerCase() + c.slice(1);
+    const fila = cols.map(c => {
+      const v = obj[clave(c)];
+      if (c === 'Activo') return v !== false;
+      return String(v === undefined || v === null ? '' : v).slice(0, 120);
+    });
+    if (idx > 0) h.getRange(idx + 1, 1, 1, fila.length).setValues([fila]);
+    else h.appendRow(fila);
+    return { ok: true };
   } finally {
     lock.releaseLock();
   }

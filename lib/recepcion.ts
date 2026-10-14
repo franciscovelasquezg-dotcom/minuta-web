@@ -10,6 +10,9 @@ export interface ItemRecepcion {
   recibido: number | null
   frio: Frio
   nota?: string
+  fotoUrl?: string
+  // Foto nueva (data URL) solo mientras se envía; el servidor la guarda en Drive y devuelve fotoUrl
+  foto?: string
 }
 
 export interface TempRecepcion {
@@ -118,5 +121,67 @@ export function comprimirFoto(file: File, maxLado = 1000, calidad = 0.7): Promis
     }
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('No se pudo leer la foto')) }
     img.src = url
+  })
+}
+
+export interface ProveedorRec { id: string; nombre: string; activo: boolean }
+export interface ProductoRec { id: string; nombre: string; unidad: string; frio: Frio; proveedor: string; activo: boolean }
+export interface CatalogoRec { proveedores: ProveedorRec[]; productos: ProductoRec[] }
+
+const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+
+export function buscarProducto(cat: CatalogoRec | null, nombre: string, proveedor?: string): ProductoRec | undefined {
+  if (!cat) return undefined
+  const n = norm(nombre)
+  const activos = cat.productos.filter(p => p.activo && norm(p.nombre) === n)
+  return activos.find(p => proveedor && norm(p.proveedor) === norm(proveedor)) || activos[0]
+}
+
+function frioDe(txt: string): Frio | null {
+  const t = norm(txt)
+  if (t.startsWith('cong')) return 'congelado'
+  if (t.startsWith('refr') || t.startsWith('fri')) return 'refrigerado'
+  if (t.startsWith('amb') || t.startsWith('sec')) return 'ambiente'
+  return null
+}
+
+// Lee un Excel con columnas Producto | Cantidad | Unidad | Tipo (opcional). Reconoce los encabezados por nombre.
+export async function leerPedidoExcel(file: File, cat: CatalogoRec | null, proveedor?: string): Promise<{ items: ItemRecepcion[]; omitidas: number }> {
+  const XLSX = await import('xlsx')
+  const wb = XLSX.read(await file.arrayBuffer(), { type: 'array' })
+  const filas: (string | number)[][] = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' })
+  if (filas.length === 0) return { items: [], omitidas: 0 }
+  const enc = filas[0].map(c => norm(String(c)))
+  const idx = (...claves: string[]) => enc.findIndex(c => claves.some(k => c.includes(k)))
+  const tieneEnc = idx('producto', 'articulo', 'item', 'descrip') >= 0
+  const cP = tieneEnc ? idx('producto', 'articulo', 'item', 'descrip') : 0
+  const cC = tieneEnc ? idx('cant') : 1
+  const cU = tieneEnc ? idx('unid') : 2
+  const cT = tieneEnc ? idx('tipo', 'frio', 'temp') : 3
+  const items: ItemRecepcion[] = []
+  let omitidas = 0
+  for (const f of filas.slice(tieneEnc ? 1 : 0)) {
+    const nombre = String(f[cP] ?? '').trim()
+    if (!nombre) continue
+    const cant = Number(String(f[cC] ?? '').replace(',', '.'))
+    if (!isFinite(cant) || cant <= 0) { omitidas++; continue }
+    const conocido = buscarProducto(cat, nombre, proveedor)
+    const unidadTxt = cU >= 0 ? String(f[cU] ?? '').trim() : ''
+    const frioTxt = cT >= 0 ? frioDe(String(f[cT] ?? '')) : null
+    items.push({
+      id: nuevoId(), producto: nombre, esperado: cant, recibido: null,
+      unidad: unidadTxt || conocido?.unidad || 'un',
+      frio: frioTxt || conocido?.frio || 'ambiente',
+    })
+  }
+  return { items, omitidas }
+}
+
+export function descargarPlantillaPedido(): Promise<void> {
+  return import('xlsx').then(XLSX => {
+    const ws = XLSX.utils.aoa_to_sheet([['Producto', 'Cantidad', 'Unidad', 'Tipo'], ['Pollo trutro', 40, 'kg', 'refrigerado'], ['Arroz', 25, 'saco', 'ambiente'], ['Helado', 6, 'caja', 'congelado']])
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Pedido')
+    XLSX.writeFile(wb, 'plantilla_pedido.xlsx')
   })
 }

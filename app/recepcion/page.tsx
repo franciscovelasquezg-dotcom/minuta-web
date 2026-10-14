@@ -3,9 +3,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '@/lib/api'
 import AppHeader from '@/components/AppHeader'
+import RecepcionCatalogo from '@/components/RecepcionCatalogo'
+import RecepcionHistorial from '@/components/RecepcionHistorial'
+import { construirPDFRecepcion } from '@/lib/recepcionPdf'
 import {
-  Recepcion, ItemRecepcion, Frio, UNIDADES, RANGO, tempOk, estadoItem, diferencia, resumir,
-  nuevoId, horaAhora, recepcionNueva, comprimirFoto,
+  Recepcion, ItemRecepcion, Frio, CatalogoRec, UNIDADES, RANGO, tempOk, estadoItem, diferencia, resumir,
+  nuevoId, horaAhora, recepcionNueva, comprimirFoto, buscarProducto, leerPedidoExcel, descargarPlantillaPedido,
 } from '@/lib/recepcion'
 
 const BORRADOR_KEY = 'recepcion_borrador_v1'
@@ -18,7 +21,9 @@ const boton = { background: '#10B981', color: '#0B1326', minHeight: 48 }
 const botonSec = { background: '#1E293B', color: '#F1F5F9', border: '1px solid #334155', minHeight: 48 }
 
 function guardarBorrador(r: Recepcion) {
-  try { localStorage.setItem(BORRADOR_KEY, JSON.stringify(r)) } catch { /* sin espacio */ }
+  // Las fotos de producto pesan: no van al borrador del teléfono
+  const liviano = { ...r, items: r.items.map(i => { const { foto, ...resto } = i; void foto; return resto }) }
+  try { localStorage.setItem(BORRADOR_KEY, JSON.stringify(liviano)) } catch { /* sin espacio */ }
 }
 function leerBorrador(): Recepcion | null {
   try { const raw = localStorage.getItem(BORRADOR_KEY); return raw ? JSON.parse(raw) as Recepcion : null } catch { return null }
@@ -36,9 +41,12 @@ export default function RecepcionPage() {
   const [msg, setMsg] = useState('')
   const [error, setError] = useState('')
   const [foto, setFoto] = useState<string>('')
+  const [cat, setCat] = useState<CatalogoRec | null>(null)
+  const [vista, setVista] = useState<'recepciones' | 'historial' | 'catalogo'>('recepciones')
 
   const cargar = useCallback(() => {
     api.getRecepciones().then(setLista).catch(e => setError('No se pudo cargar: ' + e.message)).finally(() => setCargando(false))
+    api.getCatalogoRec().then(setCat).catch(() => { /* el catálogo es opcional */ })
   }, [])
 
   useEffect(() => {
@@ -67,7 +75,8 @@ export default function RecepcionPage() {
     try {
       const envio = { ...rec, estado, ...(foto ? { foto } : {}) }
       const res = await api.guardarRecepcion(envio)
-      const guardada = { ...rec, estado, actualizado: res.actualizado, fotoUrl: res.fotoUrl || rec.fotoUrl }
+      const items = rec.items.map((i, n) => { const { foto: f, ...resto } = i; void f; return { ...resto, fotoUrl: res.items?.[n]?.fotoUrl || i.fotoUrl } })
+      const guardada = { ...rec, items, estado, actualizado: res.actualizado, fotoUrl: res.fotoUrl || rec.fotoUrl }
       setRec(guardada)
       setFoto('')
       if (estado === 'cerrada') { limpiarBorrador() } else { guardarBorrador(guardada) }
@@ -97,7 +106,16 @@ export default function RecepcionPage() {
         {error && <div className="mb-3 p-3 rounded-xl text-sm" style={{ background: '#450A0A', border: '1px solid #991B1B', color: '#FCA5A5' }}>{error}</div>}
         {msg && <div className="mb-3 p-3 rounded-xl text-sm" style={{ background: '#052E16', border: '1px solid #166534', color: '#86EFAC' }}>{msg}</div>}
         {!rec ? (
-          <Listado lista={lista} cargando={cargando} onNueva={nueva} onAbrir={abrir} />
+          <div>
+            <div className="grid grid-cols-3 gap-1 mb-4 p-1 rounded-xl" style={{ background: '#1E293B' }}>
+              {([['recepciones', 'Recepciones'], ['historial', 'Historial'], ['catalogo', 'Catálogo']] as const).map(([k, t]) => (
+                <button key={k} onClick={() => setVista(k)} className="rounded-lg text-xs font-bold" style={{ minHeight: 44, ...(vista === k ? { background: '#10B981', color: '#0B1326' } : { color: '#94A3B8' }) }}>{t}</button>
+              ))}
+            </div>
+            {vista === 'recepciones' && <Listado lista={lista} cargando={cargando} onNueva={nueva} onAbrir={abrir} />}
+            {vista === 'historial' && <RecepcionHistorial lista={lista} onAbrir={abrir} />}
+            {vista === 'catalogo' && <RecepcionCatalogo cat={cat} recargar={cargar} />}
+          </div>
         ) : (
           <div>
             <div className="flex items-center justify-between mb-3">
@@ -111,7 +129,7 @@ export default function RecepcionPage() {
                 <button key={p} onClick={() => setPaso(p)} className="rounded-lg text-xs font-bold" style={{ minHeight: 44, ...(paso === p ? { background: '#10B981', color: '#0B1326' } : { color: '#94A3B8' }) }}>{p}</button>
               ))}
             </div>
-            {paso === 'Pedido' && <PasoPedido rec={rec} cambiar={cambiar} foto={foto} setFoto={setFoto} setError={setError} />}
+            {paso === 'Pedido' && <PasoPedido rec={rec} cambiar={cambiar} foto={foto} setFoto={setFoto} setError={setError} cat={cat} />}
             {paso === 'Conteo' && <PasoConteo rec={rec} cambiar={cambiar} />}
             {paso === 'Temperatura' && <PasoTemp rec={rec} cambiar={cambiar} />}
             {paso === 'Cierre' && <PasoCierre rec={rec} cambiar={cambiar} />}
@@ -164,7 +182,8 @@ function Listado({ lista, cargando, onNueva, onAbrir }: { lista: Recepcion[]; ca
 
 type PasoProps = { rec: Recepcion; cambiar: (fn: (r: Recepcion) => Recepcion) => void }
 
-function PasoPedido({ rec, cambiar, foto, setFoto, setError }: PasoProps & { foto: string; setFoto: (f: string) => void; setError: (e: string) => void }) {
+function PasoPedido({ rec, cambiar, foto, setFoto, setError, cat }: PasoProps & { foto: string; setFoto: (f: string) => void; setError: (e: string) => void; cat: CatalogoRec | null }) {
+  const [info, setInfo] = useState('')
   const [producto, setProducto] = useState('')
   const [cantidad, setCantidad] = useState('')
   const [unidad, setUnidad] = useState('kg')
@@ -179,6 +198,23 @@ function PasoPedido({ rec, cambiar, foto, setFoto, setError }: PasoProps & { fot
     setProducto(''); setCantidad('')
   }
 
+  const elegirProducto = (nombre: string) => {
+    setProducto(nombre)
+    const p = buscarProducto(cat, nombre, rec.proveedor)
+    if (p) { setUnidad(p.unidad); setFrio(p.frio) }
+  }
+
+  const importar = async (f: File | undefined) => {
+    if (!f) return
+    try {
+      const { items, omitidas } = await leerPedidoExcel(f, cat, rec.proveedor)
+      if (items.length === 0) { setError('No encontré productos en el Excel (columnas: Producto, Cantidad, Unidad, Tipo)'); return }
+      setError('')
+      cambiar(r => ({ ...r, items: [...r.items, ...items] }))
+      setInfo(`${items.length} productos cargados${omitidas ? ` (${omitidas} filas sin cantidad válida omitidas)` : ''}`)
+    } catch (e) { setError('No se pudo leer el Excel: ' + (e instanceof Error ? e.message : String(e))) }
+  }
+
   const subirFoto = async (f: File | undefined) => {
     if (!f) return
     try { setFoto(await comprimirFoto(f)) } catch (e) { setError(e instanceof Error ? e.message : 'Error con la foto') }
@@ -187,7 +223,8 @@ function PasoPedido({ rec, cambiar, foto, setFoto, setError }: PasoProps & { fot
   return (
     <div className="flex flex-col gap-3">
       <div className="rounded-xl p-3 flex flex-col gap-2" style={card}>
-        <input value={rec.proveedor} onChange={e => cambiar(r => ({ ...r, proveedor: e.target.value }))} placeholder="Proveedor" className="rounded-xl px-3" style={campo} />
+        <input list="lista-proveedores" value={rec.proveedor} onChange={e => cambiar(r => ({ ...r, proveedor: e.target.value }))} placeholder="Proveedor" className="rounded-xl px-3" style={campo} />
+        <datalist id="lista-proveedores">{(cat?.proveedores || []).filter(p => p.activo).map(p => <option key={p.id} value={p.nombre} />)}</datalist>
         <input value={rec.guia} onChange={e => cambiar(r => ({ ...r, guia: e.target.value }))} placeholder="N° de guía / factura" className="rounded-xl px-3" style={campo} />
         <input value={rec.responsable} onChange={e => cambiar(r => ({ ...r, responsable: e.target.value }))} placeholder="Quién recibe" className="rounded-xl px-3" style={campo} />
         <label className="rounded-xl flex items-center justify-center gap-2 font-semibold cursor-pointer" style={botonSec}>
@@ -200,7 +237,8 @@ function PasoPedido({ rec, cambiar, foto, setFoto, setError }: PasoProps & { fot
 
       <div className="rounded-xl p-3 flex flex-col gap-2" style={card}>
         <h2 className="font-bold">Qué viene en el camión</h2>
-        <input value={producto} onChange={e => setProducto(e.target.value)} placeholder="Producto" className="rounded-xl px-3" style={campo} />
+        <input list="lista-productos" value={producto} onChange={e => elegirProducto(e.target.value)} placeholder="Producto" className="rounded-xl px-3" style={campo} />
+        <datalist id="lista-productos">{(cat?.productos || []).filter(p => p.activo && (!rec.proveedor || !p.proveedor || p.proveedor === rec.proveedor)).map(p => <option key={p.id} value={p.nombre} />)}</datalist>
         <div className="grid grid-cols-2 gap-2">
           <input value={cantidad} onChange={e => setCantidad(e.target.value)} inputMode="decimal" placeholder="Cantidad" className="rounded-xl px-3" style={campo} />
           <select value={unidad} onChange={e => setUnidad(e.target.value)} className="rounded-xl px-3" style={campo}>
@@ -213,6 +251,16 @@ function PasoPedido({ rec, cambiar, foto, setFoto, setError }: PasoProps & { fot
           <option value="congelado">Congelado (-18 °C o menos)</option>
         </select>
         <button onClick={agregar} className="rounded-xl font-bold" style={boton}>Agregar al pedido</button>
+      </div>
+
+      <div className="rounded-xl p-3 flex flex-col gap-2" style={card}>
+        <h2 className="font-bold">O cargar el pedido desde Excel</h2>
+        <label className="rounded-xl flex items-center justify-center gap-2 font-semibold cursor-pointer" style={botonSec}>
+          <span className="material-symbols-outlined">upload_file</span>Subir Excel del pedido
+          <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={e => { importar(e.target.files?.[0]); e.target.value = '' }} />
+        </label>
+        <button onClick={() => descargarPlantillaPedido()} className="text-xs underline text-left" style={{ color: '#10B981', minHeight: 44 }}>Descargar plantilla de ejemplo</button>
+        {info && <div className="text-xs" style={{ color: '#86EFAC' }}>{info}</div>}
       </div>
 
       {rec.items.map(i => (
@@ -254,6 +302,12 @@ function PasoConteo({ rec, cambiar }: PasoProps) {
               <input value={i.recibido === null ? '' : String(i.recibido)} inputMode="decimal" placeholder="Llegó" onChange={e2 => { const t = e2.target.value.replace(',', '.'); poner(i.id, t === '' || !isFinite(Number(t)) ? null : Number(t)) }} className="flex-1 rounded-xl px-3" style={campo} />
               <button onClick={() => poner(i.id, i.esperado)} className="rounded-xl font-bold px-4" style={boton}>Todo OK</button>
             </div>
+            <label className="flex items-center gap-2 mt-2 rounded-xl px-3 cursor-pointer text-sm font-semibold" style={botonSec}>
+              <span className="material-symbols-outlined" style={{ fontSize: 20 }}>photo_camera</span>
+              {i.foto ? 'Foto lista ✓ (cambiar)' : i.fotoUrl ? 'Foto guardada ✓ (cambiar)' : 'Foto del producto (opcional)'}
+              <input type="file" accept="image/*" capture="environment" className="hidden" onChange={async e2 => { const f = e2.target.files?.[0]; e2.target.value = ''; if (!f) return; try { const d = await comprimirFoto(f); cambiar(r => ({ ...r, items: r.items.map(x => x.id === i.id ? { ...x, foto: d } : x) })) } catch { /* foto ilegible */ } }} />
+            </label>
+            {i.fotoUrl && <a href={i.fotoUrl} target="_blank" rel="noreferrer" className="text-xs underline" style={{ color: '#10B981' }}>Ver foto guardada</a>}
             <input value={i.nota || ''} onChange={e2 => cambiar(r => ({ ...r, items: r.items.map(x => x.id === i.id ? { ...x, nota: e2.target.value } : x) }))} placeholder="Nota (ej. caja rota)" className="w-full rounded-xl px-3 mt-2" style={campo} />
           </div>
         )
@@ -342,6 +396,9 @@ function PasoCierre({ rec, cambiar }: PasoProps) {
           </div>
         ))}
       </div>
+      <button onClick={() => construirPDFRecepcion(rec)} className="rounded-xl font-bold flex items-center justify-center gap-2" style={botonSec}>
+        <span className="material-symbols-outlined">picture_as_pdf</span>Descargar informe PDF
+      </button>
       <textarea value={rec.obs} onChange={e => cambiar(r => ({ ...r, obs: e.target.value }))} placeholder="Observaciones (reclamos, rechazos, estado del camión…)" rows={4} className="rounded-xl p-3" style={{ ...campo, minHeight: 100 }} />
     </div>
   )
